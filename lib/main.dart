@@ -28,17 +28,17 @@ void _decodeUbx(List<int> buffer) {
 }
 
 void _connectTcp(onData) async {
-  socket = await Socket.connect('192.168.1.52', 7042);
-  print('connected');
-  //socket.listen((List<int> event) {
-  //  print(event);
-  //});
-  socket.listen(onData);
+  try {
+    socket = await Socket.connect('192.168.1.52', 7042);
+    print('connected');
+    socket.listen(onData);
+  } catch (e) {
+    print('Not connected, $e');
+  }
 }
 
 void main() {
   runApp(MyApp());
-  //_connectTcp();
 }
 
 class MyApp extends StatelessWidget {
