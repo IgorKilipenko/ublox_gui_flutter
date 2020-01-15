@@ -27,18 +27,18 @@ void _decodeUbx(List<int> buffer) {
   });
 }
 
-void _connectTcp() async {
+void _connectTcp(onData) async {
   socket = await Socket.connect('192.168.1.52', 7042);
   print('connected');
   //socket.listen((List<int> event) {
   //  print(event);
   //});
-  socket.listen(_decodeUbx);
+  socket.listen(onData);
 }
 
 void main() {
   runApp(MyApp());
-  _connectTcp();
+  //_connectTcp();
 }
 
 class MyApp extends StatelessWidget {
@@ -84,6 +84,32 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
+  double _lat;
+  double _log;
+  _MyHomePageState() : super() {
+    _connectTcp(this._decodeUbx);
+  }
+
+  void _decodeUbx(List<int> buffer) {
+    buffer.forEach((int b) {
+      try {
+        UbxPacket packet = _decoder.inputData(b);
+        if (packet != null) {
+          //print(packet.classId);
+          if (packet.classId == 0x01 && packet.msgId == 0x07) {
+            PvtMessage msg = packet as PvtMessage;
+            print('Log: ${msg.longitude}');
+            print('Lat: ${msg.latitude}');
+
+            _setPvt(msg);
+          }
+        }
+      } catch (e, s) {
+        print('Exception details:\n $e');
+        print('Stack trace:\n $s');
+      }
+    });
+  }
 
   void _incrementCounter() {
     setState(() {
@@ -93,6 +119,13 @@ class _MyHomePageState extends State<MyHomePage> {
       // _counter without calling setState(), then the build method would not be
       // called again, and so nothing would appear to happen.
       _counter++;
+    });
+  }
+
+  void _setPvt(PvtMessage msg) {
+    setState(() {
+      _lat = msg.latitude;
+      _log = msg.longitude;
     });
   }
 
@@ -137,8 +170,8 @@ class _MyHomePageState extends State<MyHomePage> {
               '$_counter',
               style: Theme.of(context).textTheme.display1,
             ),
-            Text('LAT'),
-            Text('LOG')
+            Text('LAT: $_lat'),
+            Text('LOG: $_log')
           ],
         ),
       ),
