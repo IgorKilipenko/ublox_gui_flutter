@@ -44,32 +44,32 @@ class UbxDecoder {
 
     var payload = ubxPacket.payload;
 
-    var pvtMsg = new PvtMessage();
-    pvtMsg.classId = ClassIds['NAV'];
-    pvtMsg.msgId = NavMessageIds['PVT'];
-    pvtMsg.iTow = payload.getUint32(0, Endian.little);
-    pvtMsg.year = payload.getUint16(4, Endian.little);
-    pvtMsg.month = payload.getUint8(6);
-    pvtMsg.day = payload.getUint8(7);
-    pvtMsg.hour = payload.getUint8(8);
-    pvtMsg.min = payload.getUint8(9);
-    pvtMsg.sec = payload.getUint8(10);
-    //  ..............
-    pvtMsg.fixType = payload.getUint8(20);
-    pvtMsg.carrierSolution = payload.getUint8(21) >> 6;
-    pvtMsg.numSatInSolution = payload.getUint8(23);
-    pvtMsg.longitude = _getDeg(payload.getInt32(24, Endian.little), 7);
-    pvtMsg.latitude = _getDeg(payload.getInt32(28, Endian.little), 7);
-    pvtMsg.height = _getDistM(payload.getInt32(32, Endian.little));
-    pvtMsg.heightMSL = _getDistM(payload.getInt32(36, Endian.little));
-    pvtMsg.horizontalAcc = _getDistM(payload.getUint32(40, Endian.little));
-    pvtMsg.verticalAcc = _getDistM(payload.getUint32(44, Endian.little));
-    pvtMsg.groundSpeed = _getDistM(payload.getInt32(60, Endian.little));
-    pvtMsg.headMotion = _getDeg(payload.getInt32(64, Endian.little), 5);
-    pvtMsg.speedAcc = _getDistM(payload.getUint32(68, Endian.little));
-    pvtMsg.headAcc = _getDeg(payload.getUint32(72, Endian.little), 5);
-    pvtMsg.pDOP = payload.getUint16(76, Endian.little);
-    pvtMsg.headVeh = _getDeg(payload.getInt32(84, Endian.little), 5);
+    var pvtMsg = new PvtMessage()
+      ..classId = ClassIds['NAV']
+      ..msgId = NavMessageIds['PVT']
+      ..iTow = payload.getUint32(0, Endian.little)
+      ..year = payload.getUint16(4, Endian.little)
+      ..month = payload.getUint8(6)
+      ..day = payload.getUint8(7)
+      ..hour = payload.getUint8(8)
+      ..min = payload.getUint8(9)
+      ..sec = payload.getUint8(10)
+      //  ..............
+      ..fixType = payload.getUint8(20)
+      ..carrierSolution = payload.getUint8(21) >> 6
+      ..numSatInSolution = payload.getUint8(23)
+      ..longitude = _getDeg(payload.getInt32(24, Endian.little), 7)
+      ..latitude = _getDeg(payload.getInt32(28, Endian.little), 7)
+      ..height = _getDistM(payload.getInt32(32, Endian.little))
+      ..heightMSL = _getDistM(payload.getInt32(36, Endian.little))
+      ..horizontalAcc = _getDistM(payload.getUint32(40, Endian.little))
+      ..verticalAcc = _getDistM(payload.getUint32(44, Endian.little))
+      ..groundSpeed = _getDistM(payload.getInt32(60, Endian.little))
+      ..headMotion = _getDeg(payload.getInt32(64, Endian.little), 5)
+      ..speedAcc = _getDistM(payload.getUint32(68, Endian.little))
+      ..headAcc = _getDeg(payload.getUint32(72, Endian.little), 5)
+      ..pDOP = payload.getUint16(76, Endian.little)
+      ..headVeh = _getDeg(payload.getInt32(84, Endian.little), 5);
     // ...............
 
     return pvtMsg;
@@ -90,7 +90,7 @@ class UbxDecoder {
 
     if (this._nbyte == PAYLOAD_OFFSET) {
       //****this._length = new Uint16Array(this._buffer, 4, 2)[0] + 8;
-      this._length = new Uint16List.view(this._uintBuffer.buffer, 4, 2)[0]+8;
+      this._length = new Uint16List.view(this._uintBuffer.buffer, 4, 2)[0] + 8;
       if (this._length > MAX_MSG_LEN) {
         this._nbyte = 0;
         return null;
@@ -169,8 +169,8 @@ class UbxDecoder {
     ///    view.buffer.slice(PAYLOAD_OFFSET, packetLength - CHECKSUM_LEN)
     ///);
 
-    final payload = new ByteData.view(
-        view.buffer, PAYLOAD_OFFSET, packetLength - CHECKSUM_LEN - PAYLOAD_OFFSET);
+    final payload = new ByteData.view(view.buffer, PAYLOAD_OFFSET,
+        packetLength - CHECKSUM_LEN - PAYLOAD_OFFSET);
 
     final checkSum = view.getInt16(packetLength - CHECKSUM_LEN, Endian.little);
     UbxPacket ubxPacket = new UbxPacket();

@@ -1,6 +1,6 @@
-///def apikeyPropertiesFile = rootProject.file("../../apikey.properties")
-///def apikeyProperties = new Properties()
-///apikeyProperties.load(new FileInputStream(apikeyPropertiesFile))
+def apikeyPropertiesFile = new File('${projectDir}', '../../apikey.properties')
+def apikeyProperties = new Properties()
+apikeyProperties.load(new FileInputStream(apikeyPropertiesFile))
 
 def localProperties = new Properties()
 def localPropertiesFile = rootProject.file('local.properties')
@@ -48,7 +48,7 @@ android {
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        ///map_api_key apikeyProperties['MAP_API_KEY']
+        buildConfigField "String", "MAP_API_KEY", apikeyProperties['MAP_API_KEY']
     }
 
     buildTypes {
