@@ -7,8 +7,8 @@ import 'package:provider/provider.dart';
 UbxDecoder _decoder = new UbxDecoder();
 
 class UbxTcpListener with ChangeNotifier {
-  double _latitude;
-  double _longitude;
+  double _latitude = 0;
+  double _longitude = 0;
   bool _connected = false;
   static Socket _socket;
 
@@ -18,12 +18,30 @@ class UbxTcpListener with ChangeNotifier {
   Socket get socket => _socket;
 
   UbxTcpListener() {
-    start();
+    //start();
   }
 
-  Future<void> start() async {
-    if (!_connected)
-      await this._connectTcp(_decodeUbx);
+  Future start() async {
+    if (!_connected) await this._connectTcp(_decodeUbx);
+  }
+
+  Future stop() async {
+    if (_socket != null && _connected) {
+      try {
+        await _socket.flush();
+        _connected = false;
+        await _socket.close();
+        _socket.destroy();
+        print('Disconnected');
+      } catch (e) {
+        print('Stop connection error, $e');
+      }
+    }
+    if (_connected || _socket != null) {
+      _connected = false;
+      _socket = null;
+      notifyListeners();
+    }
   }
 
   void setPvt(PvtMessage msg) {
@@ -37,24 +55,18 @@ class UbxTcpListener with ChangeNotifier {
       _socket = await Socket.connect('192.168.1.52', 7042);
       _connected = _socket != null ? true : false;
       print('connected');
-      socket.listen(onData, onDone: () {
-        _connected = false;
-        _socket = null;
-        notifyListeners();
-        print('Disconnected');
-      }, onError: (e, StackTrace s) {
-        _connected = false;
-        _socket = null;
-        notifyListeners();
+      socket.listen(onData, onDone: () async {
+        print('OnDone stoped....');
+        await stop();
+        print('Disconnected | onDone');
+      }, onError: (e, StackTrace s) async {
+        await stop();
         print('Disconnected,\nerror: $e\ntrace: $s');
       }, cancelOnError: true);
     } catch (e) {
-      _connected = false;
-      _socket = null;
+      await stop();
       print('Not connected, $e');
-    } finally {
-      
-    }
+    } finally {}
     return _connected;
   }
 
@@ -66,8 +78,8 @@ class UbxTcpListener with ChangeNotifier {
           //print(packet.classId);
           if (packet.classId == 0x01 && packet.msgId == 0x07) {
             PvtMessage msg = packet as PvtMessage;
-            print('Log: ${msg.longitude}');
-            print('Lat: ${msg.latitude}');
+            //print('Log: ${msg.longitude}');
+            //print('Lat: ${msg.latitude}');
 
             setPvt(msg);
           }

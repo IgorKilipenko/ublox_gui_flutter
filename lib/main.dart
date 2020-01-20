@@ -54,36 +54,52 @@ class UbxGuiApp extends StatelessWidget {
           //    create: (context) => AnotherModel()),
         ],
         child: MaterialApp(
-          theme: ThemeData(primarySwatch: Colors.blue),
+          theme: ThemeData(primarySwatch: Colors.orange),
           home: Scaffold(
               appBar: AppBar(title: Text('Ubx GUI FLUTTER')),
               body: Card(
-                child: _buildReceiverPane(),
+                child: Column(
+                  children: <Widget>[_buildReceiverPane(), Divider()],
+                ),
               )),
         ));
   }
 
   Widget _buildReceiverPane() {
     return ListTile(
+        leading: RecieverFloatingActionButton(),
         title: Text('Receiver'),
-        subtitle: PositionWidget(),
+        subtitle: Container(
+          child: PositionWidget(),
+        ),
         trailing: Icon(Icons.more_vert));
+  }
+}
+
+class RecieverFloatingActionButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    UbxTcpListener listener = Provider.of<UbxTcpListener>(context);
+    return FloatingActionButton(
+      child: listener.connected ? Icon(Icons.stop) : Icon(Icons.play_arrow),
+      onPressed: listener.connected
+          ? () async => await listener.stop()
+          : () async => await listener.start(),
+    );
   }
 }
 
 class PositionWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Consumer<UbxTcpListener>(
-      builder: (_, listener, __) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text('Lat -> ${listener.latitude}'),
-          __,
-          Text('Log -> ${listener.longitude}')
-        ],
-      ),
-      child: Divider(),
+    UbxTcpListener listener = Provider.of<UbxTcpListener>(context);
+    bool connected = listener.connected;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text('LAT\t${(connected ? listener.latitude.toStringAsFixed(8) : '').padLeft(15)}', style: connected ? TextStyle(fontWeight: FontWeight.bold ) : null,),
+        Text('LOG\t${(connected ? listener.longitude.toStringAsFixed(8) : '').padLeft(15)}', style: connected ? TextStyle(fontWeight: FontWeight.bold ) : null,),
+      ],
     );
   }
 }
