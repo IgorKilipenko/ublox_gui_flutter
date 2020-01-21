@@ -1,3 +1,5 @@
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 import './ublox/ubx_decoder.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
@@ -54,15 +56,15 @@ class UbxGuiApp extends StatelessWidget {
           //    create: (context) => AnotherModel()),
         ],
         child: MaterialApp(
-          theme: ThemeData(primarySwatch: Colors.orange),
-          home: Scaffold(
-              appBar: AppBar(title: Text('Ubx GUI FLUTTER')),
-              body: Card(
-                child: Column(
-                  children: <Widget>[_buildReceiverPane(), Divider()],
-                ),
-              )),
-        ));
+            theme: ThemeData(primarySwatch: Colors.orange),
+            home: Scaffold(
+                appBar: AppBar(title: Text('Ubx GUI FLUTTER')),
+                body: Card(
+                    child: Column(children: <Widget>[
+                  _buildReceiverPane(),
+                  Divider(),
+                  Container(height: 200, child: MapWidget()),
+                ])))));
   }
 
   Widget _buildReceiverPane() {
@@ -94,12 +96,64 @@ class PositionWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     UbxTcpListener listener = Provider.of<UbxTcpListener>(context);
     bool connected = listener.connected;
+    List<Widget> widgets = List.from([
+      Text(
+        'LAT\t${(connected ? listener.latitude.toStringAsFixed(8) : '').padLeft(15)}',
+        style: connected ? TextStyle(fontWeight: FontWeight.bold) : null,
+      ),
+      Text(
+        'LOG\t${(connected ? listener.longitude.toStringAsFixed(8) : '').padLeft(15)}',
+        style: connected ? TextStyle(fontWeight: FontWeight.bold) : null,
+      ),
+    ]);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text('LAT\t${(connected ? listener.latitude.toStringAsFixed(8) : '').padLeft(15)}', style: connected ? TextStyle(fontWeight: FontWeight.bold ) : null,),
-        Text('LOG\t${(connected ? listener.longitude.toStringAsFixed(8) : '').padLeft(15)}', style: connected ? TextStyle(fontWeight: FontWeight.bold ) : null,),
-      ],
+      children: connected ? widgets : [],
     );
+  }
+}
+
+class MapWidget extends StatelessWidget {
+  Completer<GoogleMapController> _completer = Completer();
+  GoogleMapController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    UbxTcpListener listener = Provider.of<UbxTcpListener>(context);
+    bool connected = listener.connected;
+    if (connected && controller != null) {
+      _moveCamera(
+          lat: listener.latitude,
+          lng: listener.longitude,
+          controller: controller);
+    }
+    return GoogleMap(
+      mapType: MapType.hybrid,
+      initialCameraPosition:
+          CameraPosition(target: LatLng(40.688841, -74.044015), zoom: 11),
+      onMapCreated: (GoogleMapController controller) async {
+        if (!_completer.isCompleted) {
+          _completer.complete(controller);
+        }
+        this.controller = controller;
+        this.controller.moveCamera(CameraUpdate.newLatLng(
+            LatLng(listener.latitude, listener.longitude)));
+      },
+      markers: [
+        Marker(
+            markerId: MarkerId("curr_loc"),
+            position: LatLng(listener.latitude, listener.longitude))
+      ].toSet(),
+    );
+  }
+
+  void _moveCamera(
+      {@required double lat,
+      @required double lng,
+      @required GoogleMapController controller}) async {
+    assert(controller != null);
+    //ScreenCoordinate prev = await controller.getScreenCoordinate(LatLng(lat, lng));
+    //print('${prev.x} / ${prev.x}');
+    await controller.moveCamera(CameraUpdate.newLatLng(LatLng(lat, lng)));
   }
 }
