@@ -1,8 +1,11 @@
-import '../ublox/ubx_decoder.dart';
+//import '../ublox/ubx_decoder.dart';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:async';
-import 'package:provider/provider.dart';
+import 'package:ublox_gui_flutter/ublox/ubx_decoder.dart';
+import 'package:flutter/foundation.dart';
 
 UbxDecoder _decoder = new UbxDecoder();
 
@@ -11,6 +14,7 @@ class UbxTcpListener with ChangeNotifier {
   double _longitude = 0;
   bool _connected = false;
   static Socket _socket;
+  StreamSubscription<Uint8List> _streamSubscription;
 
   double get latitude => _latitude;
   double get longitude => _longitude;
@@ -22,12 +26,13 @@ class UbxTcpListener with ChangeNotifier {
   }
 
   Future start() async {
-    if (!_connected) await this._connectTcp(_decodeUbx);
+    if (!_connected) await _connectTcp();
   }
 
   Future stop() async {
     if (_socket != null && _connected) {
       try {
+        await stopListen();
         await _socket.flush();
         _connected = false;
         await _socket.close();
@@ -50,19 +55,50 @@ class UbxTcpListener with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> _connectTcp(onData) async {
+  Future<StreamSubscription<Uint8List>> startListen() async {
+    if (socket == null) {
+      print('Socket is null');
+      return null;
+    }
+    if (_streamSubscription != null) {
+      await _streamSubscription.cancel();
+      print('Cancel listen for restart');
+    }
+
+    _streamSubscription = socket.listen(_decodeUbx, onDone: () async {
+      print('OnDone stoped....');
+      await stop();
+      print('Disconnected | onDone');
+    }, onError: (e, StackTrace s) async {
+      await stop();
+      print('Disconnected,\nerror: $e\ntrace: $s');
+    }, cancelOnError: true);
+
+    return _streamSubscription;
+  }
+
+  Future<dynamic> stopListen() async {
+    if (socket == null || _streamSubscription == null) {
+      print('Socket is null');
+      return false;
+    }
+    var res;
+    try {
+      res = await _streamSubscription.cancel();
+      print('Cancel Stream Subscription, return $res');
+    } catch (e) {
+      print('Error cancel Stream Subscription, e -> $e');
+    }
+
+    return res;
+  }
+
+  Future<bool> _connectTcp() async {
     try {
       _socket = await Socket.connect('192.168.1.52', 7042);
       _connected = _socket != null ? true : false;
       print('connected');
-      socket.listen(onData, onDone: () async {
-        print('OnDone stoped....');
-        await stop();
-        print('Disconnected | onDone');
-      }, onError: (e, StackTrace s) async {
-        await stop();
-        print('Disconnected,\nerror: $e\ntrace: $s');
-      }, cancelOnError: true);
+      _streamSubscription = await startListen();
     } catch (e) {
       await stop();
       print('Not connected, $e');
