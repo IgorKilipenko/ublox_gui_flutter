@@ -1,13 +1,12 @@
-import 'dart:io';
 import 'dart:typed_data';
-import './class_ids.dart';
 import 'dart:math';
+import 'package:ublox_gui_flutter/ublox/class_ids.dart';
 
-final MAX_MSG_LEN = 8192;
-final HEADER_BYTES = const [181, 98];
+const MAX_MSG_LEN = 8192;
+const HEADER_BYTES = const [181, 98];
 
-final UBX_SYNCH_1 = 0xb5;
-final UBX_SYNCH_2 = 0x62;
+const UBX_SYNCH_1 = 0xb5;
+const UBX_SYNCH_2 = 0x62;
 
 const PAYLOAD_OFFSET = 6;
 const CHECKSUM_LEN = 2;
@@ -15,15 +14,15 @@ const CHECKSUM_LEN = 2;
 class UbxDecoder {
   num _nbyte = 0;
   Uint8List _uintBuffer = new Uint8List(MAX_MSG_LEN);
-  ByteData _dataView;
+  //ByteData _dataView;
 
   UbxDecoder() {
-    this._dataView = new ByteData.view(_uintBuffer.buffer);
+    //this._dataView = new ByteData.view(_uintBuffer.buffer);
   }
 
   //_allowedClasses = [];
 
-  final _payloadOffset = 6;
+  //final _payloadOffset = 6;
   var _length = 0;
   bool syncHeader(num data, Uint8List buffer) {
     buffer[0] = buffer[1];

@@ -1,6 +1,4 @@
-//import '../ublox/ubx_decoder.dart';
 import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:async';
@@ -15,21 +13,22 @@ class UbxTcpListener with ChangeNotifier {
   bool _connected = false;
   static Socket _socket;
   StreamSubscription<Uint8List> _streamSubscription;
+  //StreamController<LatLng> latLngStream = StreamController<LatLng>();
 
   double get latitude => _latitude;
   double get longitude => _longitude;
   bool get connected => _connected;
   Socket get socket => _socket;
 
-  UbxTcpListener() {
-    //start();
-  }
+  StreamController<PvtMessage> _pvtMsgController =StreamController<PvtMessage>.broadcast(onListen: () {
+        print('Start listen stream pvt msgs');
+      }, onCancel: () {
+        print('Cancel listen stream pvt msgs');
+      });
 
-  Future start() async {
-    if (!_connected) await _connectTcp();
-  }
+  Stream<PvtMessage> get pvtMessageStream => _pvtMsgController.stream;
 
-  Future stop() async {
+  Future disconnect() async {
     if (_socket != null && _connected) {
       try {
         await stopListen();
@@ -49,10 +48,13 @@ class UbxTcpListener with ChangeNotifier {
     }
   }
 
-  void setPvt(PvtMessage msg) {
+  void _setPvt(PvtMessage msg, {bool withNotifyListeners = true}) {
     _latitude = msg.latitude;
     _longitude = msg.longitude;
-    notifyListeners();
+    if (withNotifyListeners) notifyListeners();
+    if (_pvtMsgController.hasListener) {
+      _pvtMsgController.add(msg);
+    }
   }
 
   Future<StreamSubscription<Uint8List>> startListen() async {
@@ -67,10 +69,10 @@ class UbxTcpListener with ChangeNotifier {
 
     _streamSubscription = socket.listen(_decodeUbx, onDone: () async {
       print('OnDone stoped....');
-      await stop();
+      await disconnect();
       print('Disconnected | onDone');
     }, onError: (e, StackTrace s) async {
-      await stop();
+      await disconnect();
       print('Disconnected,\nerror: $e\ntrace: $s');
     }, cancelOnError: true);
 
@@ -93,14 +95,19 @@ class UbxTcpListener with ChangeNotifier {
     return res;
   }
 
-  Future<bool> _connectTcp() async {
+  Future<bool> connectTcp({bool forceConnect = false}) async {
+    if (!forceConnect && _socket != null && _connected) {
+      print('Alrady connected');
+      return _connected;
+    }
     try {
       _socket = await Socket.connect('192.168.1.52', 7042);
       _connected = _socket != null ? true : false;
       print('connected');
-      _streamSubscription = await startListen();
+      notifyListeners();
+      //_streamSubscription = await startListen();
     } catch (e) {
-      await stop();
+      //await disconnect();
       print('Not connected, $e');
     } finally {}
     return _connected;
@@ -117,7 +124,7 @@ class UbxTcpListener with ChangeNotifier {
             //print('Log: ${msg.longitude}');
             //print('Lat: ${msg.latitude}');
 
-            setPvt(msg);
+            _setPvt(msg);
           }
         }
       } catch (e, s) {
