@@ -48,7 +48,7 @@ class UbxGuiApp extends StatelessWidget {
                   height: mediaQueue.size.height,
                   margin: new EdgeInsets.all(0.0),
                   width: mediaQueue.size.width,
-                  child: MapWidget()),
+                  child: MapStreamWidget(stream: _ubxTcpListener.pvtMessageStream)),
               Positioned(
                 bottom: 0,
                 left: 0,
