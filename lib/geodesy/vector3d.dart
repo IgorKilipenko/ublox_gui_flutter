@@ -24,4 +24,9 @@ class Point3d {
   double get x => _x;
   double get y => _y;
   double get z => _z;
+
+  @override
+  String toString() {
+    return '${super.toString()}.\t{x = $_x, y = $y, x = $_z }';
+  }
 }

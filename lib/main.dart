@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:ublox_gui_flutter/components/drawer.dart';
 import 'package:ublox_gui_flutter/components/map.dart';
@@ -25,8 +26,9 @@ void main() {
 class UbxGuiApp extends StatelessWidget {
   final UbxTcpListener _ubxTcpListener = UbxTcpListener();
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) { 
     print('Native FFI 2 + 5 = ${nativeAdd(2,5)}');
+    print('pos2ecef -> ${pos2ecef(54.9332925, 82.9307390, 97.0).toString()}');
     final mediaQueue = MediaQuery.of(context);
     //final theme = Theme.of(context);
     return MultiProvider(
