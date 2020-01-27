@@ -39,3 +39,7 @@ lib/generated_plugin_registrant.dart
 # res
 **/res/**/secrets.xml
 apikey.properties
+ios/rtklib/src/**
+
+#ndk
+android/app/.cxx/**

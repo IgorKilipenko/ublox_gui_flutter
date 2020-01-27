@@ -29,3 +29,15 @@ subprojects {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
+
+//android {
+//  // ...
+//  externalNativeBuild {
+//    // Encapsulates your CMake build configurations.
+//    cmake {
+//      // Provides a relative path to your CMake build script.
+//      path "CMakeLists.txt"
+//    }
+//  }
+//  // ...
+//}

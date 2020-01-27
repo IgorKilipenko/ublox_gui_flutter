@@ -5,9 +5,19 @@ import 'dart:async';
 import 'package:ublox_gui_flutter/ublox/ubx_decoder.dart';
 import 'package:flutter/foundation.dart';
 
-UbxDecoder _decoder = new UbxDecoder();
+@immutable
+class UbxConnectionStaus {
+  final bool connected;
+  final String host;
+  final int port;
+  UbxConnectionStaus(
+      {@required this.connected, @required this.host, @required this.port});
+}
 
 class UbxTcpListener with ChangeNotifier {
+  final UbxDecoder _decoder = new UbxDecoder();
+  String _host;
+  int _port;
   double _latitude = 0;
   double _longitude = 0;
   bool _connected = false;
@@ -15,18 +25,30 @@ class UbxTcpListener with ChangeNotifier {
   StreamSubscription<Uint8List> _streamSubscription;
   //StreamController<LatLng> latLngStream = StreamController<LatLng>();
 
+  UbxTcpListener({String host = '192.168.1.52', int port = 7042})
+      : _host = host,
+        _port = port;
+
+  StreamController<PvtMessage> _pvtMsgController =
+      StreamController<PvtMessage>.broadcast(onListen: () {
+    print('Start listen stream pvt msgs');
+  }, onCancel: () {
+    print('Cancel listen stream pvt msgs');
+  });
+  StreamController<UbxConnectionStaus> _serviceController =
+      StreamController<UbxConnectionStaus>.broadcast(onListen: () {
+    print('Start listen stream pvt msgs');
+  }, onCancel: () {
+    print('Cancel listen stream pvt msgs');
+  });
+
   double get latitude => _latitude;
   double get longitude => _longitude;
   bool get connected => _connected;
   Socket get socket => _socket;
 
-  StreamController<PvtMessage> _pvtMsgController =StreamController<PvtMessage>.broadcast(onListen: () {
-        print('Start listen stream pvt msgs');
-      }, onCancel: () {
-        print('Cancel listen stream pvt msgs');
-      });
-
   Stream<PvtMessage> get pvtMessageStream => _pvtMsgController.stream;
+  Stream<UbxConnectionStaus> get serviceController => _serviceController.stream;
 
   Future disconnect() async {
     if (_socket != null && _connected) {
@@ -45,13 +67,17 @@ class UbxTcpListener with ChangeNotifier {
       _connected = false;
       _socket = null;
       notifyListeners();
+      if (_pvtMsgController.hasListener) {
+        _serviceController.add(UbxConnectionStaus(
+            connected: _connected, host: _host, port: _port));
+      }
     }
   }
 
   void _setPvt(PvtMessage msg, {bool withNotifyListeners = true}) {
-    _latitude = msg.latitude;
-    _longitude = msg.longitude;
-    if (withNotifyListeners) notifyListeners();
+    //_latitude = msg.latitude;
+    //_longitude = msg.longitude;
+    //if (withNotifyListeners) notifyListeners();
     if (_pvtMsgController.hasListener) {
       _pvtMsgController.add(msg);
     }
@@ -101,14 +127,16 @@ class UbxTcpListener with ChangeNotifier {
       return _connected;
     }
     try {
-      _socket = await Socket.connect('192.168.1.52', 7042);
+      _socket = await Socket.connect(_host, _port);
       _connected = _socket != null ? true : false;
       print('connected');
       notifyListeners();
       //_streamSubscription = await startListen();
+    } on SocketException catch (e) {
+      print('Not connected, $e');
     } catch (e) {
       //await disconnect();
-      print('Not connected, $e');
+      print('Not connected, SocketException -> $e');
     } finally {}
     return _connected;
   }

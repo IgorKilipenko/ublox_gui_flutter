@@ -5,6 +5,7 @@ import 'package:ublox_gui_flutter/components/drawer.dart';
 import 'package:ublox_gui_flutter/components/map.dart';
 import 'package:ublox_gui_flutter/components/receiver.dart';
 import 'package:ublox_gui_flutter/model/ubx_tcp_listener.dart';
+import 'package:ublox_gui_flutter/native_add.dart';
 import 'package:ublox_gui_flutter/routes.dart';
 import 'package:ublox_gui_flutter/screens/state/ui_state.dart';
 import 'package:ublox_gui_flutter/ublox/ubx_decoder.dart';
@@ -25,6 +26,7 @@ class UbxGuiApp extends StatelessWidget {
   final UbxTcpListener _ubxTcpListener = UbxTcpListener();
   @override
   Widget build(BuildContext context) {
+    print('Native FFI 2 + 5 = ${nativeAdd(2,5)}');
     final mediaQueue = MediaQuery.of(context);
     //final theme = Theme.of(context);
     return MultiProvider(

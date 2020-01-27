@@ -49,6 +49,7 @@ android {
         versionName flutterVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "String", "MAP_API_KEY", "\"${apikeyProperties['MAP_API_KEY']}\""
+        resValue "string", "map_api_key", "${apikeyProperties['MAP_API_KEY']}"
         manifestPlaceholders = [mapsApiKey: "\"${System.env.MAPS_API_KEY_MOB}\""]
     }
 
@@ -59,6 +60,14 @@ android {
             signingConfig signingConfigs.debug
         }
     }
+
+    externalNativeBuild {
+    // Encapsulates your CMake build configurations.
+        cmake {
+        // Provides a relative path to your CMake build script.
+        path "CMakeLists.txt"
+        }
+  }
 }
 
 flutter {

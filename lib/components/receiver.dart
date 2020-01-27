@@ -25,45 +25,16 @@ class ReceiverPaneWidget extends StatelessWidget {
   }
 }
 
-class PositionWidget extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    UbxTcpListener listener = Provider.of<UbxTcpListener>(context);
-    bool connected = listener.connected;
-    List<Widget> widgets = List.from([
-      Text(
-        'LAT\t${(connected ? listener.latitude.toStringAsFixed(8) : '').padLeft(15)}',
-        style: connected ? TextStyle(fontWeight: FontWeight.bold) : null,
-      ),
-      Text(
-        'LOG\t${(connected ? listener.longitude.toStringAsFixed(8) : '').padLeft(15)}',
-        style: connected ? TextStyle(fontWeight: FontWeight.bold) : null,
-      ),
-    ]);
-    return AnimatedOpacity(
-      duration: Duration(milliseconds: 100),
-      opacity: connected ? 0.5 : 0,
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 100),
-        color: Colors.white,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: widgets,
-        ),
-      ),
-    );
-  }
-}
 
 class PositionStreamWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final UbxTcpListener listener =
+    final UbxTcpListener ubxTcp =
         Provider.of<UbxTcpListener>(context, listen: false);
     //final theme = Theme.of(context);
     return StreamBuilder<PvtMessage>(
       initialData: null,
-      stream: listener.pvtMessageStream,
+      stream: ubxTcp.pvtMessageStream,
       builder: (_, snapshot) {
         if (snapshot.connectionState == ConnectionState.active &&
             snapshot.hasData) {
@@ -98,21 +69,20 @@ class PositionStreamWidget extends StatelessWidget {
 class RecieverFloatingActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    UbxTcpListener listener =
-        Provider.of<UbxTcpListener>(context, listen: false);
-    bool connected =
-        Provider.of<UbxTcpListener>(context, listen: true).connected;
+    UbxTcpListener ubxTcp =
+        Provider.of<UbxTcpListener>(context, listen: true);
+    bool connected = ubxTcp.connected;
     //////print('RecieverFloatingActionButton');
     return FloatingActionButton(
       child: connected ? Icon(Icons.stop) : Icon(Icons.play_arrow),
       onPressed: connected
           ? () async {
-              await listener.stopListen();
-              await listener.disconnect();
+              await ubxTcp.stopListen();
+              await ubxTcp.disconnect();
             }
           : () async {
-              var res = await listener.connectTcp();
-              if (res != null) await listener.startListen();
+              var res = await ubxTcp.connectTcp();
+              if (res != null) await ubxTcp.startListen();
             },
     );
   }
