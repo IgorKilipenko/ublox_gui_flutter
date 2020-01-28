@@ -82,7 +82,7 @@ class Ellipsoid {
     'WGS72': WGS72,
   };
 
-  bool equal(Ellipsoid ellipsoid) {
+  bool equals(Ellipsoid ellipsoid) {
     if (this == ellipsoid) return true;
 
     final bool eq =
@@ -181,10 +181,10 @@ class Datum {
   //@override
   //bool operator ==(Object other) => (other is Datum) && other._ellipsoid == _ellipsoid && List. other._transform == _transform;
 
-  bool equal(Datum datum) {
+  bool equals(Datum datum) {
     if (datum == this) return true;
 
-    final bool eq = datum._ellipsoid.equal(this._ellipsoid) &&
+    final bool eq = datum._ellipsoid.equals(this._ellipsoid) &&
         (datum._transform == this.transform ||
             listEquals(datum._transform, this._transform));
     return eq;
@@ -243,7 +243,7 @@ class LatLonEllipsoidal {
     if ((_lat - point.latitude).abs() > precisionErrorTolerance) return false;
     if ((_lon - point.longitude).abs() > precisionErrorTolerance) return false;
     if ((_height - point.height).abs() > precisionErrorTolerance) return false;
-    if (!_datum.equal(point.datum)) return false;
+    if (!_datum.equals(point.datum)) return false;
     //if (_referenceFrame != point.referenceFrame) return false;
     //if (_epoch != point.epoch) return false;
 
@@ -310,12 +310,12 @@ class Cartesian {
     Cartesian oldCartesian;
     List<double> transform;
 
-    if (_datum == null || _datum.equal(Datum.WGS84)) {
+    if (_datum == null || _datum.equals(Datum.WGS84)) {
       // converting from WGS 84
       oldCartesian = this;
       transform = toDatum.transform;
     }
-    if (toDatum.equal(Datum.WGS84)) {
+    if (toDatum.equals(Datum.WGS84)) {
       // converting to WGS 84; use inverse transform
       oldCartesian = this;
       transform = _datum.transform.map((p) => -p);

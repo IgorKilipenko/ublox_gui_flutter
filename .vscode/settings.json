@@ -1,3 +1,10 @@
 {
-    "java.configuration.updateBuildConfiguration": "disabled"
+    "java.configuration.updateBuildConfiguration": "disabled",
+    "files.associations": {
+        "*.postcss": "css",
+        "*.vfl": "vex",
+        "*.tcc": "c",
+        "type_traits": "c",
+        "typeinfo": "c"
+    }
 }

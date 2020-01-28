@@ -1,19 +1,9 @@
 import 'dart:ffi'; // For FFI
 import 'dart:io';
 import 'dart:math' as Math;
-import 'dart:typed_data';
-
 import 'package:ffi/ffi.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:ublox_gui_flutter/geodesy/vector3d.dart'; // For Platform.isX
-
-final DynamicLibrary nativeAddLib = Platform.isAndroid
-    ? DynamicLibrary.open("libnative_add.so")
-    : DynamicLibrary.process();
-
-final int Function(int x, int y) nativeAdd = nativeAddLib
-    .lookup<NativeFunction<Int32 Function(Int32, Int32)>>("native_add")
-    .asFunction();
+import 'package:meta/meta.dart' show visibleForTesting;
 
 final DynamicLibrary nativeRtklib = Platform.isAndroid
     ? DynamicLibrary.open("librtklib_test.so")
@@ -25,9 +15,7 @@ final _pos2ecef_func = nativeRtklib
             Void Function(
                 Pointer<Double> pos, Pointer<Double> res)>>("pos2ecef")
     .asFunction<void Function(Pointer<Double>, Pointer<Double>)>();
-//final pos2ecef = _pos2ecef_ptr.asFunction<void Function(Pointer<Double>, double)>();
 
-/// Transform geodetic position to ecef position
 Point3d pos2ecef(double latitude, longitude, [double height = 0]) {
   assert(_pos2ecef_func != null);
   final double ro = 180.0 / Math.pi;
@@ -48,4 +36,40 @@ Point3d pos2ecef(double latitude, longitude, [double height = 0]) {
   free(resBuf);
 
   return res;
+}
+
+class RtklibImpl {
+  static RtklibImpl _instance;
+  DynamicLibrary _dynamicLibrary;
+  static const String LIB_NAME = 'librtklib_test.so';
+
+  @visibleForTesting
+  RtklibImpl.private(this._dynamicLibrary);
+
+  factory RtklibImpl() {
+    if (_instance == null) {
+      final dynamicLib = Platform.isAndroid
+          ? DynamicLibrary.open(LIB_NAME)
+          : DynamicLibrary.process();
+
+      _instance = RtklibImpl.private(dynamicLib);
+    }
+
+    return _instance;
+  }
+
+  Pointer<NativeFunction<T>> lookupFunctionPointer<T extends Function>(
+      String name) {
+    assert(_dynamicLibrary != null);
+
+    final  funcPtr =
+        _dynamicLibrary.lookup<NativeFunction<T>>(name);
+    if (funcPtr == null) {
+      final Exception err = Exception('Lookup function $name is null');
+      print('Error, ${err.toString()}');
+      throw err;
+    }
+
+    return funcPtr;
+  }
 }

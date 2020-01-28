@@ -1557,6 +1557,27 @@ extern gtime_t utc2gpst(gtime_t t)
     }
     return t;
 }
+
+////////////////////////////////////////////////////////////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+gtime_t* utc2gpst2() {
+    gtime_t* time = (gtime_t*)malloc(sizeof(gtime_t));
+	time->time = 1000;
+    time->sec = 75;
+	return time;
+}
+
+gtime_t* utc2gpst3(gtime_t* time) {
+    gtime_t utcTime = utc2gpst(*time);
+    gtime_t* res = (gtime_t*)malloc(sizeof(gtime_t));
+	res->time = utcTime.time;
+    res->sec = utcTime.sec;
+	return res;
+}
+
+/////////////////////////////////////////////////!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
 /* gpstime to bdt --------------------------------------------------------------
 * convert gpstime to bdt (beidou navigation satellite system time)
 * args   : gtime_t t        I   time expressed in gpstime
