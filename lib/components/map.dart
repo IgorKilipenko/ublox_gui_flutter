@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:ublox_gui_flutter/model/gnss/gnss_channel.dart';
 import 'dart:async';
 import 'package:ublox_gui_flutter/ublox/ubx_decoder.dart';
 
@@ -24,8 +25,7 @@ class _MapStreamWidgetState extends State<MapStreamWidget> {
   GoogleMapController _controller;
   StreamSubscription _streamSubscription;
   Marker _currMarket;
-  static const platform = const MethodChannel('samples.flutter.dev/battery');
-  String _batteryLevel = 'Unknown battery level.';
+
   @override
   Widget build(BuildContext context) {
     return GoogleMap(
@@ -40,7 +40,15 @@ class _MapStreamWidgetState extends State<MapStreamWidget> {
           });
 
           print('Map complete');
-          print('Battery Lrvrl -> $_batteryLevel');
+
+          final batteryLevel = await GnssChannel().getBatteryLevel();
+          print('Battery Level -> $batteryLevel %.');
+
+          final _gpsProviders = await GnssChannel().getGpsProviders();
+          _gpsProviders?.forEach((prov) => print('GPS Provider -> $prov'));
+
+          final locationEnabled = await GnssChannel().isLocationEnabled();
+          print('IsLocationEnabled = $locationEnabled');
         }
       },
       markers: _currMarket == null ? null : [_currMarket].toSet(),
@@ -65,7 +73,6 @@ class _MapStreamWidgetState extends State<MapStreamWidget> {
     //    position: LatLng(54.688841, 82.044015),
     //    infoWindow: InfoWindow(title: 'Position'));
     _listen();
-    _getBatteryLevel();
   }
 
   void _listen() {
@@ -108,17 +115,48 @@ class _MapStreamWidgetState extends State<MapStreamWidget> {
     }
   }
 
-  Future<void> _getBatteryLevel() async {
-    String batteryLevel;
-    try {
-      final int result = await platform.invokeMethod('getBatteryLevel');
-      batteryLevel = 'Battery level at $result % .';
-    } on PlatformException catch (e) {
-      batteryLevel = "Failed to get battery level: '${e.message}'.";
-    }
+  //Future<void> _getBatteryLevel() async {
+  //  String batteryLevel;
+  //  try {
+  //    final int result = await platform.invokeMethod('getBatteryLevel');
+  //    batteryLevel = 'Battery level at $result % .';
+  //  } on PlatformException catch (e) {
+  //    batteryLevel = "Failed to get battery level: '${e.message}'.";
+  //  }
+//
+  //  setState(() {
+  //    _batteryLevel = batteryLevel;
+  //  });
+  //}
 
-    setState(() {
-      _batteryLevel = batteryLevel;
-    });
-  }
+  //Future<void> _getGpsProviders() async {
+  //  List<String> gpsProviders;
+  //  try {
+  //    final List<dynamic> result =
+  //        await gnssChannel.invokeMethod('getGpsProviders');
+  //    gpsProviders = result.cast<String>();
+  //  } on PlatformException catch (e) {
+  //    print("Failed to get gnss providers: '${e.message}'.");
+  //    gpsProviders = null;
+  //  }
+//
+  //  setState(() {
+  //    _gpsProviders = gpsProviders;
+  //  });
+  //}
+//
+  //Future<void> _isLocationEnabled() async {
+  //  bool enabled;
+  //  try {
+  //    final bool result = await gnssChannel.invokeMethod('isLocationEnabled');
+  //    enabled = result;
+  //  } on PlatformException catch (e) {
+  //    print("Failed to get isLocationEnabled: '${e.message}'.");
+  //    enabled = null;
+  //  }
+//
+  //  setState(() {
+  //    _locationEnabled = enabled;
+  //  });
+  //}
 }
