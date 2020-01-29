@@ -26,11 +26,19 @@ void main() {
 
 class UbxGuiApp extends StatelessWidget {
   final UbxTcpListener _ubxTcpListener = UbxTcpListener();
-  Gtime time = Gtime();
+  
   @override
   Widget build(BuildContext context) { 
+    
     print('Native FFI 2 + 5 = ${nativeAdd(2,5)}');
     print('pos2ecef -> ${pos2ecef(54.9332925, 82.9307390, 97.0).toString()}');
+    
+    final gtime = Gtime();
+    final utcTime = Gtime_t.allocate(DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000, 18);
+    final gpsTime = gtime.utc2gpst(utcTime);
+    print('Utc time -> time = ${utcTime.time}, sec = ${utcTime.sec}');
+    print('Gps time -> time = ${gpsTime.time}, sec = ${gpsTime.sec}');
+
     final mediaQueue = MediaQuery.of(context);
     //final theme = Theme.of(context);
     return MultiProvider(
