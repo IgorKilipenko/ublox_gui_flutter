@@ -16,26 +16,26 @@ class Gtime_t extends Struct {
         ..sec = sec;
 }
 
-typedef Ftype = Pointer<Gtime_t> Function(Pointer<Gtime_t>) ;
+typedef FFi_utc2gpst_ffi = Pointer<Gtime_t> Function(Pointer<Gtime_t>);
 
 class Gtime {
-    final RtklibImpl _rtklib;
+  final RtklibImpl _rtklib;
 
-  //Gtime_t Function(int, double) _gpst2timeFunc;
+  FFi_utc2gpst_ffi _utc2gpstFunc;
 
   Gtime() : _rtklib = RtklibImpl() {
     _initFunctionPtrs();
   }
 
   void _initFunctionPtrs() {
-    print(DartRepresentationOf("Gtime_t").toString());
-    final gpst2timePtr = _rtklib.lookupFunctionPointer<Pointer<Gtime_t> Function(Pointer<Gtime_t>)>('utc2gpst_ffi');
-    final func = gpst2timePtr.asFunction<Ftype>();
-    print(func);
-    Gtime_t utc = Gtime_t.allocate(DateTime.now().second, 2);
-    var p = func(utc.addressOf);
-    print('POINTER -> time = ${p.ref.time} sec = ${p.ref.sec}');
-    Gtime_t gt = p.ref;
+    final utc2gpstPtr =
+        _rtklib.lookupFunctionPointer<FFi_utc2gpst_ffi>('utc2gpst_ffi');
+    _utc2gpstFunc = utc2gpstPtr.asFunction();
+  }
+
+  Gtime_t utc2gpst(Gtime_t utc) {
+    final gpsTimePtr = _utc2gpstFunc(utc.addressOf);
+    return gpsTimePtr.ref;
   }
 
   //EXPORT gtime_t gpst2time(int week, double sec);
