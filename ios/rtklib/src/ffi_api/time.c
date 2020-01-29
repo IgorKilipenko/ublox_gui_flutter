@@ -14,9 +14,9 @@
 #include "rtklib.h"
 
 gtime_t* utc2gpst_ffi(gtime_t* time) {
-    gtime_t utcTime = utc2gpst(*time);
+    gtime_t gpsTime = utc2gpst(*time);
     gtime_t* res = (gtime_t*)malloc(sizeof(gtime_t));
-	res->time = utcTime.time;
-    res->sec = utcTime.sec;
+	res->time = gpsTime.time;
+    res->sec = gpsTime.sec;
 	return res;
 }
