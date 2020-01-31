@@ -10,10 +10,18 @@ class Gtime_t extends Struct {
   @Double()
   double sec;
 
-  factory Gtime_t.allocate(int time, double sec) =>
-      allocate<Gtime_t>(count: 2).ref
+  factory Gtime_t.allocate(int time, double sec) {
+    try {
+      final ptr = allocate<Gtime_t>(count: 1).ref
         ..time = time
         ..sec = sec;
+      print('Gtime_t Ptr allocated');
+      return ptr;
+    } catch (e) {
+      print('Error allocate, $e');
+      throw e;
+    }
+  }
 }
 
 typedef FFi_utc2gpst_ffi = Pointer<Gtime_t> Function(Pointer<Gtime_t>);

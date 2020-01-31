@@ -1,30 +1,43 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
-import 'package:ublox_gui_flutter/ublox/ubx_decoder.dart';
 
 class GnssRaw {
   int id;
 }
 
 class GnssChannel {
-  static const _gnssChannel =
-      const MethodChannel('samples.flutter.dev/gnss_measurement');
+  final MethodChannel _gnssChannel;
+  final MethodChannel _batteryChennel;
+  static GnssChannel _instace;
 
-  static const batteryChennel = const MethodChannel('samples.flutter.dev/battery');
-
-  final StreamController<GnssRaw> _gnssRawController = StreamController<GnssRaw>.broadcast(onListen: () {
+  final StreamController<GnssRaw> _gnssRawController =
+      StreamController<GnssRaw>.broadcast(onListen: () {
     print('Start listen gnss raw data');
   }, onCancel: () {
     print('Cancel listen gnss raw data');
   });
+
+  factory GnssChannel() {
+    if (_instace != null) return _instace;
+
+    final gnssChannel = MethodChannel('samples.flutter.dev/gnss_measurement');
+    final batteryChennel = MethodChannel('samples.flutter.dev/battery');
+    _instace = GnssChannel._private(
+        gnssChannel: gnssChannel, batteryChennel: batteryChennel);
+    return _instace;
+  }
+
+  GnssChannel._private(
+      {MethodChannel gnssChannel, MethodChannel batteryChennel})
+      : this._gnssChannel = gnssChannel,
+        this._batteryChennel = batteryChennel;
 
   Stream<GnssRaw> get gnssRawStream => _gnssRawController.stream;
 
   Future<int> getBatteryLevel() async {
     int batteryLevel;
     try {
-      batteryLevel = await batteryChennel.invokeMethod('getBatteryLevel');
+      batteryLevel = await _batteryChennel.invokeMethod('getBatteryLevel');
     } on PlatformException catch (e) {
       print("Failed to get battery level: '${e.message}'.");
     }

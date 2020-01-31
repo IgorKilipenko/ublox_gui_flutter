@@ -1,10 +1,8 @@
 import 'dart:ffi'; // For FFI
 import 'dart:io';
 import 'dart:math' as Math;
-import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:ublox_gui_flutter/geodesy/vector3d.dart'; // For Platform.isX
 
 final DynamicLibrary nativeAddLib = Platform.isAndroid
