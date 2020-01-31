@@ -1,14 +1,11 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:ublox_gui_flutter/components/drawer.dart';
 import 'package:ublox_gui_flutter/components/map.dart';
 import 'package:ublox_gui_flutter/components/receiver.dart';
 import 'package:ublox_gui_flutter/model/ubx_tcp_listener.dart';
-import 'package:ublox_gui_flutter/native_add.dart';
 import 'package:ublox_gui_flutter/routes.dart';
-import 'package:ublox_gui_flutter/rtklib/Gtime.dart';
 import 'package:ublox_gui_flutter/screens/state/ui_state.dart';
 import 'package:ublox_gui_flutter/ublox/ubx_decoder.dart';
 
@@ -19,26 +16,21 @@ void main() {
     DeviceOrientation.portraitDown,
   ]).then((_) => runApp(MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: UbxGuiApp(),
-      routes: ScreenRoutes.routes,
+      //home: UbxGuiApp(),
+      initialRoute: ScreenRoutes.HOME,
+      //routes: ScreenRoutes.routes,
+      onGenerateRoute: ScreenRoutes.generateRoute,
       theme: ThemeData(primarySwatch: Colors.blue))));
 }
 
 class UbxGuiApp extends StatelessWidget {
-  final UbxTcpListener _ubxTcpListener = UbxTcpListener();
+  static const String routeName = ScreenRoutes.HOME;
+  static final UbxTcpListener _ubxTcpListener = UbxTcpListener();
+  static final UiState _uiState = UiState();
   
   @override
   Widget build(BuildContext context) { 
     
-    print('Native FFI 2 + 5 = ${nativeAdd(2,5)}');
-    print('pos2ecef -> ${pos2ecef(54.9332925, 82.9307390, 97.0).toString()}');
-    
-    final gtime = Gtime();
-    final utcTime = Gtime_t.allocate(DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000, 18);
-    final gpsTime = gtime.utc2gpst(utcTime);
-    print('Utc time -> time = ${utcTime.time}, sec = ${utcTime.sec}');
-    print('Gps time -> time = ${gpsTime.time}, sec = ${gpsTime.sec}');
-
     final mediaQueue = MediaQuery.of(context);
     //final theme = Theme.of(context);
     return MultiProvider(
@@ -48,7 +40,9 @@ class UbxGuiApp extends StatelessWidget {
             value: _ubxTcpListener,
           ),
           //create: (context) => UbxTcpListener()),
-          ChangeNotifierProvider<UiState>(create: (context) => UiState())
+          ChangeNotifierProvider<UiState>.value(
+            value: _uiState,
+          )
         ],
         child: Scaffold(
           appBar: AppBar(title: Text('Ubx GUI FLUTTER')),

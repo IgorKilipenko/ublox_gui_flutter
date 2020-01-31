@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:ublox_gui_flutter/model/gnss/gnss_channel.dart';
+import 'package:provider/provider.dart';
+import 'package:ublox_gui_flutter/screens/state/ui_state.dart';
 import 'dart:async';
 import 'package:ublox_gui_flutter/ublox/ubx_decoder.dart';
 
@@ -24,35 +24,38 @@ class _MapStreamWidgetState extends State<MapStreamWidget> {
   final Completer<GoogleMapController> _completer = Completer();
   GoogleMapController _controller;
   StreamSubscription _streamSubscription;
-  Marker _currMarket;
+  Marker _currMarker;
+  bool _receiverEnabled = false;
+  UiState _uiState;
 
   @override
   Widget build(BuildContext context) {
+    if (_uiState == null) return Center(child: CircularProgressIndicator());
+    //print('${uiState.mapInfo?.lastCameraPossition}');
     return GoogleMap(
-      mapType: MapType.hybrid,
-      initialCameraPosition: widget.initialCameraPosition,
-      onMapCreated: (GoogleMapController controller) async {
-        print('On map created');
-        if (!_completer.isCompleted) {
-          _completer.complete(controller);
-          setState(() {
-            _controller = controller;
-          });
+        mapType: MapType.hybrid,
+        initialCameraPosition: _uiState.mapInfo?.lastCameraPossition ??
+            widget.initialCameraPosition,
+        onMapCreated: (GoogleMapController controller) async {
+          print('On map created');
+          if (!_completer.isCompleted) {
+            _completer.complete(controller);
+            setState(() {
+              _controller = controller;
+            });
 
-          print('Map complete');
-
-          final batteryLevel = await GnssChannel().getBatteryLevel();
-          print('Battery Level -> $batteryLevel %.');
-
-          final _gpsProviders = await GnssChannel().getGpsProviders();
-          _gpsProviders?.forEach((prov) => print('GPS Provider -> $prov'));
-
-          final locationEnabled = await GnssChannel().isLocationEnabled();
-          print('IsLocationEnabled = $locationEnabled');
-        }
-      },
-      markers: _currMarket == null ? null : [_currMarket].toSet(),
-    );
+            print('Map complete');
+          }
+        },
+        onCameraMove: (camPos) {
+          if (_uiState != null) {
+            _uiState.setMapInfo(MapInfo(
+                lastCameraPossition: camPos,
+                receiverEnabled: _receiverEnabled,
+                lastMarkerPosition: _currMarker?.position));
+          }
+        },
+        markers: _currMarker != null ? Set<Marker>.from([_currMarker]) : null);
   }
 
   @override
@@ -66,7 +69,10 @@ class _MapStreamWidgetState extends State<MapStreamWidget> {
 
   @override
   void initState() {
+    print('Map initState');
     super.initState();
+    _uiState = Provider.of<UiState>(context, listen: false);
+    _initMarkersFromUiState();
     //currMarket = Marker(
     //    markerId: MarkerId("curr_loc"),
     //    icon: BitmapDescriptor.defaultMarker,
@@ -77,30 +83,52 @@ class _MapStreamWidgetState extends State<MapStreamWidget> {
 
   void _listen() {
     _streamSubscription = widget.stream.listen((value) {
+      if (!_receiverEnabled) _receiverEnabled = true;
       final LatLng pos = LatLng(value.latitude, value.longitude);
-      _moveCamera(currPosition: pos, prevPosition: _currMarket?.position);
+      _moveCamera(currPosition: pos, prevPosition: _currMarker?.position);
       setState(() {
-        _currMarket = Marker(
-            markerId: MarkerId("curr_loc"),
-            icon: BitmapDescriptor.defaultMarker,
-            position: LatLng(value.latitude, value.longitude),
-            infoWindow: InfoWindow(title: 'Receiver position'));
+        _currMarker = _buildMarker(value.latitude, value.longitude);
       });
     }, onError: (e) {
       print('Erreor listening, err -> $e');
     }, onDone: () {
       print('Done listen');
+      _receiverEnabled = false;
     });
+  }
+
+  Marker _buildMarker(double latitude, double longitude) {
+    return Marker(
+        markerId: MarkerId("curr_loc"),
+        icon: BitmapDescriptor.defaultMarker,
+        position: LatLng(latitude, longitude),
+        infoWindow: InfoWindow(title: 'Receiver position'));
+  }
+
+  void _initMarkersFromUiState() {
+    if (_uiState.mapInfo != null && _uiState.mapInfo.lastMarkerPosition != null) {
+      final double latitude = _uiState.mapInfo.lastMarkerPosition.latitude;
+      final double longitude = _uiState.mapInfo.lastMarkerPosition.longitude;
+      _currMarker = _buildMarker(latitude, longitude);
+    }
   }
 
   @override
   void dispose() {
     _streamSubscription.cancel();
+    print('Map disposing');
     super.dispose();
+  }
+
+  @override
+  void deactivate() {
+    print('Map deactivating');
+    super.deactivate();
   }
 
   Future<bool> _moveCamera(
       {@required LatLng currPosition, LatLng prevPosition}) async {
+    if (_controller == null) return false;
     bool isChanged = prevPosition == null ||
         (prevPosition.latitude - currPosition.latitude).abs() >
                 widget.minDistChanged &&
@@ -114,49 +142,4 @@ class _MapStreamWidgetState extends State<MapStreamWidget> {
       return false;
     }
   }
-
-  //Future<void> _getBatteryLevel() async {
-  //  String batteryLevel;
-  //  try {
-  //    final int result = await platform.invokeMethod('getBatteryLevel');
-  //    batteryLevel = 'Battery level at $result % .';
-  //  } on PlatformException catch (e) {
-  //    batteryLevel = "Failed to get battery level: '${e.message}'.";
-  //  }
-//
-  //  setState(() {
-  //    _batteryLevel = batteryLevel;
-  //  });
-  //}
-
-  //Future<void> _getGpsProviders() async {
-  //  List<String> gpsProviders;
-  //  try {
-  //    final List<dynamic> result =
-  //        await gnssChannel.invokeMethod('getGpsProviders');
-  //    gpsProviders = result.cast<String>();
-  //  } on PlatformException catch (e) {
-  //    print("Failed to get gnss providers: '${e.message}'.");
-  //    gpsProviders = null;
-  //  }
-//
-  //  setState(() {
-  //    _gpsProviders = gpsProviders;
-  //  });
-  //}
-//
-  //Future<void> _isLocationEnabled() async {
-  //  bool enabled;
-  //  try {
-  //    final bool result = await gnssChannel.invokeMethod('isLocationEnabled');
-  //    enabled = result;
-  //  } on PlatformException catch (e) {
-  //    print("Failed to get isLocationEnabled: '${e.message}'.");
-  //    enabled = null;
-  //  }
-//
-  //  setState(() {
-  //    _locationEnabled = enabled;
-  //  });
-  //}
 }
