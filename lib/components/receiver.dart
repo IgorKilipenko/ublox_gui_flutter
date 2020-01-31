@@ -6,7 +6,6 @@ import 'package:ublox_gui_flutter/ublox/ubx_decoder.dart';
 class ReceiverPaneWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    print('ddddddd');
     return DecoratedBox(
       decoration: BoxDecoration(color: Colors.white),
       child: ListTile(
