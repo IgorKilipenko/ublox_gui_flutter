@@ -59,7 +59,7 @@ class MainActivity: FlutterActivity() {
 
     private val BATTERY_CHANNEL = "samples.flutter.dev/battery"
     private val RAW_GNSS_CHENNEL = "samples.flutter.dev/gnss_measurement"
-    private val GNSS_STREAM_CHENNEL = "ublox_gui_flutter/gnss_measurement_stream"
+    private val GNSS_STREAM_CHANNEL = "ublox_gui_flutter/gnss_measurement_stream"
 
     private lateinit var _batteryManager: BatteryManager
     private lateinit var _locationManager: LocationManager
@@ -109,7 +109,7 @@ class MainActivity: FlutterActivity() {
         }
 
 
-        EventChannel(flutterEngine.dartExecutor.binaryMessenger, GNSS_STREAM_CHENNEL).setStreamHandler(
+        EventChannel(flutterEngine.dartExecutor.binaryMessenger, GNSS_STREAM_CHANNEL).setStreamHandler(
             object : EventChannel.StreamHandler {
                 override fun onListen(arguments: Any?, sink: EventSink?) {
                     //_locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0.0f, GpsLocationListener(sink as EventSink) as? LocationListener)
