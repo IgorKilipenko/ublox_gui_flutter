@@ -8,6 +8,7 @@ class GnssRaw {
 class GnssChannel {
   final MethodChannel _gnssChannel;
   final MethodChannel _batteryChennel;
+  final EventChannel _gnssEventChannel;
   static GnssChannel _instace;
 
   final StreamController<GnssRaw> _gnssRawController =
@@ -22,15 +23,17 @@ class GnssChannel {
 
     final gnssChannel = MethodChannel('samples.flutter.dev/gnss_measurement');
     final batteryChennel = MethodChannel('samples.flutter.dev/battery');
+    final gnssEventChannel = EventChannel("ublox_gui_flutter/gnss_measurement_stream");
     _instace = GnssChannel._private(
-        gnssChannel: gnssChannel, batteryChennel: batteryChennel);
+        gnssChannel: gnssChannel, batteryChennel: batteryChennel, gnssEventChannel: gnssEventChannel);
     return _instace;
   }
 
   GnssChannel._private(
-      {MethodChannel gnssChannel, MethodChannel batteryChennel})
+      {MethodChannel gnssChannel, MethodChannel batteryChennel, EventChannel gnssEventChannel })
       : this._gnssChannel = gnssChannel,
-        this._batteryChennel = batteryChennel;
+        this._batteryChennel = batteryChennel,
+        _gnssEventChannel = gnssEventChannel;
 
   Stream<GnssRaw> get gnssRawStream => _gnssRawController.stream;
 
@@ -66,5 +69,9 @@ class GnssChannel {
       print("Failed to get isLocationEnabled: '${e.message}'.");
     }
     return enabled;
+  }
+
+  Stream<dynamic> getGnssStream() {
+    return _gnssEventChannel?.receiveBroadcastStream();
   }
 }

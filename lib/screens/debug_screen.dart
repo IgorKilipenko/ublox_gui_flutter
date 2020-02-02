@@ -1,43 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:ublox_gui_flutter/model/gnss/gnss_channel.dart';
 import 'package:ublox_gui_flutter/native_add.dart';
 import 'package:ublox_gui_flutter/routes.dart';
 import 'dart:async';
 
 import 'package:ublox_gui_flutter/rtklib/Gtime.dart';
+import 'package:ublox_gui_flutter/screens/screen_arguments.dart';
+
 
 class DebugScreen extends StatelessWidget {
   static const String routeName = ScreenRoutes.DEBUG;
 
   @override
   Widget build(BuildContext context) {
+    final ScreenArguments args = ModalRoute.of(context).settings.arguments;
     return Scaffold(
         appBar: AppBar(
           title: Text("Debug"),
         ),
         body: Container(
             child: Center(
-          child: FutureBuilder<Map<String, dynamic>>(
-            future: _testChannel(),
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                return Column(
-                  children: <Widget>[
-                    Text('Battery Level -> ${snapshot.data['batteryLevel']}%'),
-                    Text(
-                        'GPS Provider -> ${snapshot.data['gpsProviders']?.toString()}%'),
-                    Text(
-                        'IsLocationEnabled -> ${snapshot.data['locationEnabled'].toString().toUpperCase()}'),
-                  ],
-                );
-              }
-              return Text('Debug screen');
-            },
+          child: Column(
+            children: <Widget>[
+              FutureBuilder<Map<String, dynamic>>(
+                future: _testChannel(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    return Column(
+                      children: <Widget>[
+                        Text('Battery Level -> ${snapshot.data['batteryLevel']}%'),
+                        Text(
+                            'GPS Provider -> ${snapshot.data['gpsProviders']?.toString()}%'),
+                        Text(
+                            'IsLocationEnabled -> ${snapshot.data['locationEnabled'].toString().toUpperCase()}'),
+                      ],
+                    );
+                  }
+                  return Text('Debug screen');
+                },
+              ),
+              StreamBuilder<dynamic>(initialData: 'not data', stream: GnssChannel().getGnssStream(), builder: (context, snapshot) {
+                if (snapshot.hasData){
+                  return Text('Gnss stream -> ${snapshot.data?.toString()}');
+                }
+              },)
+            ],
           ),
         )));
   }
 
   Future<Map<String, dynamic>> _testChannel() async {
+
     final batteryLevel = await GnssChannel().getBatteryLevel();
     print('Battery Level -> $batteryLevel %.');
 

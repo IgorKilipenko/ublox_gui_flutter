@@ -1,5 +1,6 @@
 package com.example.ublox_gui_flutter
 
+import android.Manifest
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
@@ -41,9 +42,18 @@ import io.flutter.plugin.common.EventChannel.StreamHandler
 
 import androidx.annotation.Nullable
 import androidx.annotation.RequiresApi
+//import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import android.content.pm.PackageManager
+
+import android.os.Handler;
+import android.os.Looper;
+
 
 import android.util.Log
 
+@RequiresApi(api = 28)
 class MainActivity: FlutterActivity() {
 
     private val BATTERY_CHANNEL = "samples.flutter.dev/battery"
@@ -56,9 +66,16 @@ class MainActivity: FlutterActivity() {
 
     private lateinit var _gnssMeasurementsListener: GnssMeasurementsEvent.Callback
 
+    private val LOCATION_PERMISSION_REQUEST = 1
+    private val REQUIRED_PERMISSIONS = arrayOf(
+        Manifest.permission.ACCESS_FINE_LOCATION
+    )
+    private lateinit var _handler: Handler;
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         GeneratedPluginRegistrant.registerWith(flutterEngine)
+
+
 
         _init()
         Log.w("DEBUG", "adding listener")
@@ -93,33 +110,38 @@ class MainActivity: FlutterActivity() {
             }
         }
 
-        //EventChannel(flutterEngine.dartExecutor.binaryMessenger, GNSS_STREAM_CHENNEL).setStreamHandler {
-        //  object : StreamHandler {
-        //    override fun onListen(arguments: Any?, events: EventSink?) {
-        //      //GnssMeasurementsEvent.Callback gnnsCb = createGnssMeasurementsListener(events)
-        //    }
-        //    override fun onCancel(arguments: Any?) {
-        //    }
-        //  }
-        //}
-
-        //val handler = TestStreamHandler();
-        //EventChannel(flutterEngine.dartExecutor.binaryMessenger, GNSS_STREAM_CHENNEL).setStreamHandler(handler)
-
 
         EventChannel(flutterEngine.dartExecutor.binaryMessenger, GNSS_STREAM_CHENNEL).setStreamHandler(
                 //@SuppressLint("MissingPermission")
                 @RequiresApi(api = 28)
                 object : EventChannel.StreamHandler {
-                    //var gnnsCb : GnssMeasurementsEvent.Callback? = null
                     override fun onListen(arguments: Any?, sink: EventSink?) {
-                        //Log.d("TAG", "TEEEEST!!")
-                        print("dddddddddddd")
-                        _locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0.0f, GpsLocationListener(sink as EventSink) as? LocationListener)
-                        sink!!.success("Start gnss")
-                        _gnssMeasurementsListener = TGnssMeasurementsListener(sink as EventSink)
-                        var res: Boolean = _locationManager.registerGnssMeasurementsCallback(_gnssMeasurementsListener)
-                        sink!!.success(res)
+                        //_locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0.0f, GpsLocationListener(sink as EventSink) as? LocationListener)
+                        _locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+                        var handler : Handler = Handler(Looper.getMainLooper());
+                        _locationManager.registerGnssMeasurementsCallback(
+                            object : GnssMeasurementsEvent.Callback() {
+                                override fun onGnssMeasurementsReceived(event: GnssMeasurementsEvent) {
+                                    handler.post(
+                                        object: Runnable {
+                                            override fun run() {
+                                                sink!!.success("HAS_DATA")
+                                            }
+                                        }
+                                    )
+                                }
+                                override fun onStatusChanged(status: Int) {
+                                    handler.post(
+                                        object: Runnable {
+                                            override fun run() {
+                                                sink!!.success("status $status")
+                                            }
+                                        }
+                                    )
+                                }
+                            } as GnssMeasurementsEvent.Callback, handler
+                        )
+                        //sink!!.success(res)
                     }
 
                     override fun onCancel(arguments: Any?) {
@@ -132,18 +154,8 @@ class MainActivity: FlutterActivity() {
         )
     }
 
-    //@SuppressLint("MissingPermission")
-    @RequiresApi(api = 28)
     class TGnssMeasurementsListener(var sink: EventSink) : GnssMeasurementsEvent.Callback() {
         override fun onGnssMeasurementsReceived(event: GnssMeasurementsEvent) {
-            sink.success("SSSSSSSSSSSSSSSSSSS")
-            //val res = hashMapOf("raw" to event.)
-            //val gmess = mutableListOf<HashMap<String, Any>>()
-            //var count = 0
-            //for (m : GnssMeasurement in event.getMeasurements()) {
-            //    gmess.add(hashMapOf("svid" to m.getSvid()))
-            //    count++
-            //}
             sink.success("EAW")
         }
 
@@ -202,53 +214,18 @@ class MainActivity: FlutterActivity() {
     }
 
     private fun _init() {
+        if (ContextCompat.checkSelfPermission(this, REQUIRED_PERMISSIONS[0])
+            != PackageManager.PERMISSION_GRANTED) {
+            // Request permissions from the user
+            ActivityCompat.requestPermissions(
+                this,
+                REQUIRED_PERMISSIONS,
+                LOCATION_PERMISSION_REQUEST
+            )
+        }
+        _handler = Handler(Looper.getMainLooper());
         _batteryManager = getSystemService(Context.BATTERY_SERVICE) as BatteryManager
         _locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         /////_sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
     }
-
-    /////////private fun createGnssMeasurementsListener(events : EventSink) : GnssMeasurementsEvent.Callback {
-    ///////// return object: GnssMeasurementsEvent.Callback() {
-    /////////    override fun onGnssMeasurementsReceived(event : GnssMeasurementsEvent ) {
-    /////////      events.success("SSSSSSSSSSSSSSSSSSS") 
-    /////////      //val res = hashMapOf("raw" to event.)
-    /////////      val gmess = mutableListOf<HashMap<String, Any>>()
-    /////////      var count = 0
-    /////////      for (m : GnssMeasurement in event.getMeasurements()) {
-    /////////          gmess.add(hashMapOf("svid" to m.getSvid()))
-    /////////          count++
-    /////////      }
-    /////////      events.success(count)  
-    /////////    } 
-    /////////    override fun onStatusChanged(status :Int) {
-    /////////      events.success(status)
-    /////////    }
-    /////////  }
-    /////////}
-
-
-    //class TestStreamHandler() : EventChannel.StreamHandler {
-    //    override fun onListen(arguments: Any?, events: EventSink?) {
-    //      if (events == null) return;
-    //      val gnnsCb : GnssMeasurementsEvent.Callback = createGnssMeasurementsListener(events as EventSink)
-    //    }
-    //    override fun onCancel(arguments: Any?) {
-    //    }
-    //    private fun createGnssMeasurementsListener(events : EventSink) : GnssMeasurementsEvent.Callback {
-    //     return object: GnssMeasurementsEvent.Callback() {
-    //        override fun onGnssMeasurementsReceived(event : GnssMeasurementsEvent ) {
-    //          //val res = hashMapOf("raw" to event.)
-    //          val gmess = mutableListOf<HashMap<String, Any>>()
-    //          var count = 0
-    //          for (m : GnssMeasurement in event.getMeasurements()) {
-    //              gmess.add(hashMapOf("svid" to m.getSvid()))
-    //              count++
-    //          }
-    //          events.success(count)  
-    //        } 
-    //        override fun onStatusChanged(status :Int) {
-    //        }
-    //    }
-    //  }
-    //}
 }
