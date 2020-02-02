@@ -1,4 +1,5 @@
-package com.example.ublox_gui_flutter
+//package com.example.ublox_gui_flutter
+package com.igorkili.ublox_gui_flutter
 
 import android.Manifest
 import android.content.Context
