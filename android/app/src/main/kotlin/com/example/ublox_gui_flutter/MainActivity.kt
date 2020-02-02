@@ -112,36 +112,13 @@ class MainActivity: FlutterActivity() {
 
 
         EventChannel(flutterEngine.dartExecutor.binaryMessenger, GNSS_STREAM_CHENNEL).setStreamHandler(
-                //@SuppressLint("MissingPermission")
-                @RequiresApi(api = 28)
                 object : EventChannel.StreamHandler {
                     override fun onListen(arguments: Any?, sink: EventSink?) {
                         //_locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0.0f, GpsLocationListener(sink as EventSink) as? LocationListener)
                         _locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
                         var handler : Handler = Handler(Looper.getMainLooper());
-                        _locationManager.registerGnssMeasurementsCallback(
-                            object : GnssMeasurementsEvent.Callback() {
-                                override fun onGnssMeasurementsReceived(event: GnssMeasurementsEvent) {
-                                    handler.post(
-                                        object: Runnable {
-                                            override fun run() {
-                                                sink!!.success("HAS_DATA")
-                                            }
-                                        }
-                                    )
-                                }
-                                override fun onStatusChanged(status: Int) {
-                                    handler.post(
-                                        object: Runnable {
-                                            override fun run() {
-                                                sink!!.success("status $status")
-                                            }
-                                        }
-                                    )
-                                }
-                            } as GnssMeasurementsEvent.Callback, handler
-                        )
-                        //sink!!.success(res)
+                        _gnssMeasurementsListener = GnssMeasurementsListener(sink as EventSink)
+                        _locationManager.registerGnssMeasurementsCallback(_gnssMeasurementsListener, handler)
                     }
 
                     override fun onCancel(arguments: Any?) {
@@ -154,9 +131,12 @@ class MainActivity: FlutterActivity() {
         )
     }
 
-    class TGnssMeasurementsListener(var sink: EventSink) : GnssMeasurementsEvent.Callback() {
+    class GnssMeasurementsListener(var sink: EventSink) : GnssMeasurementsEvent.Callback() {
         override fun onGnssMeasurementsReceived(event: GnssMeasurementsEvent) {
-            sink.success("EAW")
+            
+            for (m : GnssMeasurement in event.getMeasurements()) {
+                sink.success("SVID -> ${m.getSvid()}\nFrequencyHz -> ${m.getCarrierFrequencyHz()}")
+            }
         }
 
         override fun onStatusChanged(status: Int) {
