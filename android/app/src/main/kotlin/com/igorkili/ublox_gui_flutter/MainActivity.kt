@@ -201,7 +201,6 @@ class MainActivity: FlutterActivity() {
                 LOCATION_PERMISSION_REQUEST
             )
         }
-        _handler = Handler(Looper.getMainLooper());
         _batteryManager = getSystemService(Context.BATTERY_SERVICE) as BatteryManager
         _locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         /////_sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
