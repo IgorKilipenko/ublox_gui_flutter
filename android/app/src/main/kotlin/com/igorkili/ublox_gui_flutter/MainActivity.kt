@@ -71,12 +71,9 @@ class MainActivity: FlutterActivity() {
     private val REQUIRED_PERMISSIONS = arrayOf(
         Manifest.permission.ACCESS_FINE_LOCATION
     )
-    private lateinit var _handler: Handler;
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         GeneratedPluginRegistrant.registerWith(flutterEngine)
-
-
 
         _init()
         Log.w("DEBUG", "adding listener")
@@ -113,22 +110,22 @@ class MainActivity: FlutterActivity() {
 
 
         EventChannel(flutterEngine.dartExecutor.binaryMessenger, GNSS_STREAM_CHENNEL).setStreamHandler(
-                object : EventChannel.StreamHandler {
-                    override fun onListen(arguments: Any?, sink: EventSink?) {
-                        //_locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0.0f, GpsLocationListener(sink as EventSink) as? LocationListener)
-                        _locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-                        var handler : Handler = Handler(Looper.getMainLooper());
-                        _gnssMeasurementsListener = GnssMeasurementsListener(sink as EventSink)
-                        _locationManager.registerGnssMeasurementsCallback(_gnssMeasurementsListener, handler)
-                    }
-
-                    override fun onCancel(arguments: Any?) {
-                        if (_gnssMeasurementsListener != null) {
-                            _locationManager.unregisterGnssMeasurementsCallback(_gnssMeasurementsListener)
-                        }
-
-                    }
+            object : EventChannel.StreamHandler {
+                override fun onListen(arguments: Any?, sink: EventSink?) {
+                    //_locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0.0f, GpsLocationListener(sink as EventSink) as? LocationListener)
+                    _locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+                    var handler : Handler = Handler(Looper.getMainLooper());
+                    _gnssMeasurementsListener = GnssMeasurementsListener(sink as EventSink)
+                    _locationManager.registerGnssMeasurementsCallback(_gnssMeasurementsListener, handler)
                 }
+
+                override fun onCancel(arguments: Any?) {
+                    if (_gnssMeasurementsListener != null) {
+                        _locationManager.unregisterGnssMeasurementsCallback(_gnssMeasurementsListener)
+                    }
+
+                }
+            }
         )
     }
 
