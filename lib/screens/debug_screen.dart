@@ -44,6 +44,11 @@ class DebugScreen extends StatelessWidget {
                 if (snapshot.hasData){
                   return Text('Gnss stream -> ${snapshot.data?.toString()}');
                 }
+              },),
+              StreamBuilder<dynamic>(initialData: 'not data', stream: GnssChannel().getGnssRawStream(), builder: (context, snapshot) {
+                if (snapshot.hasData){
+                  return Text('RawGnss stream -> ${snapshot.data?.toString()}');
+                }
               },)
             ],
           ),

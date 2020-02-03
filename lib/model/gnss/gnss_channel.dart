@@ -9,6 +9,7 @@ class GnssChannel {
   final MethodChannel _gnssChannel;
   final MethodChannel _batteryChennel;
   final EventChannel _gnssEventChannel;
+  final EventChannel _gnssRawEventChannel;
   static GnssChannel _instace;
 
   final StreamController<GnssRaw> _gnssRawController =
@@ -24,16 +25,18 @@ class GnssChannel {
     final gnssChannel = MethodChannel('samples.flutter.dev/gnss_measurement');
     final batteryChennel = MethodChannel('samples.flutter.dev/battery');
     final gnssEventChannel = EventChannel("ublox_gui_flutter/gnss_measurement_stream");
+    final gnssRawEventChannel = EventChannel("ublox_gui_flutter/gnss_raw_data_stream");
     _instace = GnssChannel._private(
-        gnssChannel: gnssChannel, batteryChennel: batteryChennel, gnssEventChannel: gnssEventChannel);
+        gnssChannel: gnssChannel, batteryChennel: batteryChennel, gnssEventChannel: gnssEventChannel, gnssRawEventChannel : gnssRawEventChannel);
     return _instace;
   }
 
   GnssChannel._private(
-      {MethodChannel gnssChannel, MethodChannel batteryChennel, EventChannel gnssEventChannel })
+      {MethodChannel gnssChannel, MethodChannel batteryChennel, EventChannel gnssEventChannel, EventChannel gnssRawEventChannel })
       : this._gnssChannel = gnssChannel,
         this._batteryChennel = batteryChennel,
-        _gnssEventChannel = gnssEventChannel;
+        _gnssEventChannel = gnssEventChannel,
+        _gnssRawEventChannel = gnssRawEventChannel;
 
   Stream<GnssRaw> get gnssRawStream => _gnssRawController.stream;
 
@@ -73,5 +76,9 @@ class GnssChannel {
 
   Stream<dynamic> getGnssStream() {
     return _gnssEventChannel?.receiveBroadcastStream();
+  }
+
+  Stream<dynamic> getGnssRawStream() {
+    return _gnssRawEventChannel?.receiveBroadcastStream();
   }
 }

@@ -1,6 +1,8 @@
 //package com.example.ublox_gui_flutter
 package com.igorkili.ublox_gui_flutter
 
+import com.igorkili.ublox_gui_flutter.raw_gnss.GnssRawDataStream
+
 import android.Manifest
 import android.content.Context
 import android.content.ContextWrapper
@@ -40,6 +42,7 @@ import io.flutter.plugins.GeneratedPluginRegistrant
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.EventChannel.EventSink
 import io.flutter.plugin.common.EventChannel.StreamHandler
+import io.flutter.plugin.common.PluginRegistry.Registrar
 
 import androidx.annotation.Nullable
 import androidx.annotation.RequiresApi
@@ -77,6 +80,8 @@ class MainActivity: FlutterActivity() {
 
         _init()
         Log.w("DEBUG", "adding listener")
+
+        GnssRawDataStream.registerStreamWith(this.context, this, flutterEngine.dartExecutor.binaryMessenger)
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, BATTERY_CHANNEL).setMethodCallHandler {
             // Note: this method is invoked on the main thread.
@@ -118,12 +123,12 @@ class MainActivity: FlutterActivity() {
                     _gnssMeasurementsListener = GnssMeasurementsListener(sink as EventSink)
                     _locationManager.registerGnssMeasurementsCallback(_gnssMeasurementsListener, handler)
                 }
-
+//
                 override fun onCancel(arguments: Any?) {
                     if (_gnssMeasurementsListener != null) {
                         _locationManager.unregisterGnssMeasurementsCallback(_gnssMeasurementsListener)
                     }
-
+//
                 }
             }
         )
