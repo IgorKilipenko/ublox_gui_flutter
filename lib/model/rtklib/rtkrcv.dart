@@ -1,7 +1,7 @@
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 import 'package:ublox_gui_flutter/geodesy/vector3d.dart';
-import 'package:ublox_gui_flutter/rtklib/rtklib_impl.dart';
+import 'package:ublox_gui_flutter/model/rtklib/rtklib_impl.dart';
 import 'dart:math' as Math;
 
 class RtkrcvImpl {

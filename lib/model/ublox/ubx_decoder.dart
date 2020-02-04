@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 import 'dart:math';
-import 'package:ublox_gui_flutter/ublox/class_ids.dart';
+import 'package:ublox_gui_flutter/model/ublox/class_ids.dart';
 
 const MAX_MSG_LEN = 8192;
 const HEADER_BYTES = const [181, 98];
