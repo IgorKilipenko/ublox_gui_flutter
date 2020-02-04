@@ -8,37 +8,41 @@ class GnssRaw {
 class GnssChannel {
   final MethodChannel _gnssChannel;
   final MethodChannel _batteryChennel;
-  final EventChannel _gnssEventChannel;
+  final EventChannel _gpsLocationEventChannel;
   final EventChannel _gnssRawEventChannel;
+  Stream<dynamic> _rawDataStream;
+  Stream<dynamic> _locationDataStream;
   static GnssChannel _instace;
 
-  final StreamController<GnssRaw> _gnssRawController =
-      StreamController<GnssRaw>.broadcast(onListen: () {
-    print('Start listen gnss raw data');
-  }, onCancel: () {
-    print('Cancel listen gnss raw data');
-  });
+
+  //final StreamController<GnssRaw> _gnssRawController =
+  //    StreamController<GnssRaw>.broadcast(onListen: () {
+  //  print('Start listen gnss raw data');
+  //}, onCancel: () {
+  //  print('Cancel listen gnss raw data');
+  //});
 
   factory GnssChannel() {
     if (_instace != null) return _instace;
 
     final gnssChannel = MethodChannel('samples.flutter.dev/gnss_measurement');
     final batteryChennel = MethodChannel('samples.flutter.dev/battery');
-    final gnssEventChannel = EventChannel("ublox_gui_flutter/gnss_measurement_stream");
+    final gpsLocationEventChannel = EventChannel("ublox_gui_flutter/gps_location/events");
+    final gpsLocationMethodChannel = MethodChannel("ublox_gui_flutter/gps_location/methods");
     final gnssRawEventChannel = EventChannel("ublox_gui_flutter/gnss_raw_data_stream");
     _instace = GnssChannel._private(
-        gnssChannel: gnssChannel, batteryChennel: batteryChennel, gnssEventChannel: gnssEventChannel, gnssRawEventChannel : gnssRawEventChannel);
+        gnssChannel: gnssChannel, batteryChennel: batteryChennel, gpsLocationEventChannel: gpsLocationEventChannel, gnssRawEventChannel : gnssRawEventChannel);
     return _instace;
   }
 
   GnssChannel._private(
-      {MethodChannel gnssChannel, MethodChannel batteryChennel, EventChannel gnssEventChannel, EventChannel gnssRawEventChannel })
+      {MethodChannel gnssChannel, MethodChannel batteryChennel, EventChannel gpsLocationEventChannel, EventChannel gnssRawEventChannel })
       : this._gnssChannel = gnssChannel,
         this._batteryChennel = batteryChennel,
-        _gnssEventChannel = gnssEventChannel,
+        _gpsLocationEventChannel = gpsLocationEventChannel,
         _gnssRawEventChannel = gnssRawEventChannel;
 
-  Stream<GnssRaw> get gnssRawStream => _gnssRawController.stream;
+  //Stream<GnssRaw> get gnssRawStream => _gnssRawController.stream;
 
   Future<int> getBatteryLevel() async {
     int batteryLevel;
@@ -74,11 +78,13 @@ class GnssChannel {
     return enabled;
   }
 
-  Stream<dynamic> getGnssStream() {
-    return _gnssEventChannel?.receiveBroadcastStream();
+  Stream<dynamic> getGpsLocationStream() {
+    _locationDataStream ??= _gpsLocationEventChannel?.receiveBroadcastStream();
+    return _locationDataStream;
   }
 
   Stream<dynamic> getGnssRawStream() {
-    return _gnssRawEventChannel?.receiveBroadcastStream();
+    _rawDataStream ??= _gnssRawEventChannel?.receiveBroadcastStream();
+    return _rawDataStream;
   }
 }
