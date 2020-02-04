@@ -63,73 +63,85 @@ class GnssRawDataStream(context: Context, activity: Activity) : StreamHandler  {
     private var _locationManager: LocationManager? = null
 
     companion object {
-        @JvmStatic private val TAG = "GnssRawChannel"
-        @JvmStatic val GNSS_STREAM_CHANNEL = "ublox_gui_flutter/gnss_raw_data_stream"
-        @JvmStatic private val LOCATION_PERMISSION_REQUEST = 1
-        @JvmStatic private val REQUIRED_PERMISSIONS = arrayOf(
+        @JvmStatic 
+        private val TAG = "GnssRawChannel"
+        @JvmStatic 
+        val GNSS_STREAM_CHANNEL = "ublox_gui_flutter/gnss_raw_data_stream"
+        @JvmStatic 
+        private val LOCATION_PERMISSION_REQUEST = 1
+        @JvmStatic 
+        private val REQUIRED_PERMISSIONS = arrayOf(
             Manifest.permission.ACCESS_FINE_LOCATION
         )
         @JvmStatic
-        fun registerStreamWith(registrar: Registrar) {
-            val plugin = GnssRawDataStream(registrar.context(), registrar.activity())
-            val channel = EventChannel(registrar.messenger(), GNSS_STREAM_CHANNEL)
-            channel.setStreamHandler(plugin)
+        fun registerStreamWith(registrar: Registrar) : GnssRawDataStream {
+            //val plugin = GnssRawDataStream(registrar.context(), registrar.activity())
+            //val channel = EventChannel(registrar.messenger(), GNSS_STREAM_CHANNEL)
+            //channel.setStreamHandler(plugin)
+            return registerStreamWith(registrar.context(), registrar.activity(), registrar.messenger())
         }
         @JvmStatic
-        fun registerStreamWith(context: Context, activity: Activity, messenger : BinaryMessenger) {
+        fun registerStreamWith(context: Context, activity: Activity, messenger : BinaryMessenger) : GnssRawDataStream {
             val plugin = GnssRawDataStream(context, activity)
             val channel = EventChannel(messenger, GNSS_STREAM_CHANNEL)
             channel.setStreamHandler(plugin)
+            return plugin
         }
-    }
-
-    fun checkPermission() {
-        if (_mContext.checkSelfPermission(REQUIRED_PERMISSIONS[0])
-            != PackageManager.PERMISSION_GRANTED) {
-            // Request permissions from the user
-            _mActivity?.requestPermissions(
-                REQUIRED_PERMISSIONS,
-                LOCATION_PERMISSION_REQUEST
-            )
+        @JvmStatic
+        fun checkPermission(context: Context, activity: Activity) {
+            if (context.checkSelfPermission(REQUIRED_PERMISSIONS[0])
+                != PackageManager.PERMISSION_GRANTED) {
+                // Request permissions from the user
+                activity.requestPermissions(
+                    REQUIRED_PERMISSIONS,
+                    LOCATION_PERMISSION_REQUEST
+                )
+            }
         }
     }
 
     override fun onListen(arguments: Any?, sink: EventSink?) {
         Log.w(TAG, "onListen start")
         if (sink != null) {
-            _startListenRawData(sink as EventSink);
+            checkPermission(_mContext, _mActivity)
+            _locationManager = _mContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            var handler : Handler = Handler(Looper.getMainLooper())
+            _gnssMeasurementsListener = GnssMeasurementsListener(sink)
+            _locationManager?.registerGnssMeasurementsCallback(_gnssMeasurementsListener as GnssMeasurementsEvent.Callback, handler)
         }
     }
 
     override fun onCancel(arguments: Any?) {
         Log.w(TAG, "onCancel start")
-        _stopListenRawData()
-    }
-
-    private fun _startListenRawData(sink: EventSink) {
-        checkPermission()
-        _locationManager = _mContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        var handler : Handler = Handler(Looper.getMainLooper())
-        _gnssMeasurementsListener = GnssMeasurementsListener(sink)
-        _locationManager?.registerGnssMeasurementsCallback(_gnssMeasurementsListener as GnssMeasurementsEvent.Callback, handler)
-    }
-
-    private fun _stopListenRawData() {
         if (_gnssMeasurementsListener != null) {
             _locationManager?.unregisterGnssMeasurementsCallback(_gnssMeasurementsListener as GnssMeasurementsEvent.Callback)
         }
     }
 
+    //private fun _startListenRawData(sink: EventSink) {
+    //    checkPermission(_mContext, _mActivity)
+    //    _locationManager = _mContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    //    var handler : Handler = Handler(Looper.getMainLooper())
+    //    _gnssMeasurementsListener = GnssMeasurementsListener(sink)
+    //    _locationManager?.registerGnssMeasurementsCallback(_gnssMeasurementsListener as GnssMeasurementsEvent.Callback, handler)
+    //}
+
+    //private fun _stopListenRawData() {
+    //    if (_gnssMeasurementsListener != null) {
+    //        _locationManager?.unregisterGnssMeasurementsCallback(_gnssMeasurementsListener as GnssMeasurementsEvent.Callback)
+    //    }
+    //}
+
     class GnssMeasurementsListener(var sink: EventSink) : GnssMeasurementsEvent.Callback() {
         override fun onGnssMeasurementsReceived(event: GnssMeasurementsEvent) {
-            
             for (m : GnssMeasurement in event.getMeasurements()) {
                 sink.success("SVID -> ${m.getSvid()}\nFrequencyHz -> ${m.getCarrierFrequencyHz()}")
             }
         }
 
         override fun onStatusChanged(status: Int) {
-            sink.success(status)
+            sink.success("Status -> $status")
         }
     }
 }
+
