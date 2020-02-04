@@ -2,6 +2,7 @@
 package com.igorkili.ublox_gui_flutter
 
 import com.igorkili.ublox_gui_flutter.raw_gnss.GnssRawDataStream
+import com.igorkili.ublox_gui_flutter.raw_gnss.GpsLocationStream
 
 import android.Manifest
 import android.content.Context
@@ -81,7 +82,8 @@ class MainActivity: FlutterActivity() {
         _init()
         Log.w("DEBUG", "adding listener")
 
-        GnssRawDataStream.registerStreamWith(this.context, this, flutterEngine.dartExecutor.binaryMessenger)
+        var rawStream = GnssRawDataStream.registerStreamWith(this.context, this, flutterEngine.dartExecutor.binaryMessenger)
+        var locationStream = GpsLocationStream.registerStreamWith(this.context, this, flutterEngine.dartExecutor.binaryMessenger)
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, BATTERY_CHANNEL).setMethodCallHandler {
             // Note: this method is invoked on the main thread.
@@ -114,24 +116,24 @@ class MainActivity: FlutterActivity() {
         }
 
 
-        EventChannel(flutterEngine.dartExecutor.binaryMessenger, GNSS_STREAM_CHANNEL).setStreamHandler(
-            object : EventChannel.StreamHandler {
-                override fun onListen(arguments: Any?, sink: EventSink?) {
-                    //_locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0.0f, GpsLocationListener(sink as EventSink) as? LocationListener)
-                    _locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-                    var handler : Handler = Handler(Looper.getMainLooper());
-                    _gnssMeasurementsListener = GnssMeasurementsListener(sink as EventSink)
-                    _locationManager.registerGnssMeasurementsCallback(_gnssMeasurementsListener, handler)
-                }
-//
-                override fun onCancel(arguments: Any?) {
-                    if (_gnssMeasurementsListener != null) {
-                        _locationManager.unregisterGnssMeasurementsCallback(_gnssMeasurementsListener)
-                    }
-//
-                }
-            }
-        )
+        //EventChannel(flutterEngine.dartExecutor.binaryMessenger, GNSS_STREAM_CHANNEL).setStreamHandler(
+        //    object : EventChannel.StreamHandler {
+        //        override fun onListen(arguments: Any?, sink: EventSink?) {
+        //            //_locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0.0f, GpsLocationListener(sink as EventSink) as? LocationListener)
+        //            _locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        //            var handler : Handler = Handler(Looper.getMainLooper());
+        //            _gnssMeasurementsListener = GnssMeasurementsListener(sink as EventSink)
+        //            _locationManager.registerGnssMeasurementsCallback(_gnssMeasurementsListener, handler)
+        //        }
+////
+        //        override fun onCancel(arguments: Any?) {
+        //            if (_gnssMeasurementsListener != null) {
+        //                _locationManager.unregisterGnssMeasurementsCallback(_gnssMeasurementsListener)
+        //            }
+////
+        //        }
+        //    }
+        //)
     }
 
     class GnssMeasurementsListener(var sink: EventSink) : GnssMeasurementsEvent.Callback() {
