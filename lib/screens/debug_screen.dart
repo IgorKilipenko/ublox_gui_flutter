@@ -8,7 +8,6 @@ import 'dart:async';
 import 'package:ublox_gui_flutter/rtklib/Gtime.dart';
 import 'package:ublox_gui_flutter/screens/screen_arguments.dart';
 
-
 class DebugScreen extends StatelessWidget {
   static const String routeName = ScreenRoutes.DEBUG;
 
@@ -29,7 +28,8 @@ class DebugScreen extends StatelessWidget {
                   if (snapshot.hasData) {
                     return Column(
                       children: <Widget>[
-                        Text('Battery Level -> ${snapshot.data['batteryLevel']}%'),
+                        Text(
+                            'Battery Level -> ${snapshot.data['batteryLevel']}%'),
                         Text(
                             'GPS Provider -> ${snapshot.data['gpsProviders']?.toString()}%'),
                         Text(
@@ -40,23 +40,41 @@ class DebugScreen extends StatelessWidget {
                   return Text('Debug screen');
                 },
               ),
-              StreamBuilder<dynamic>(initialData: 'not data', stream: GnssChannel().getGnssStream(), builder: (context, snapshot) {
-                if (snapshot.hasData){
-                  return Text('Gnss stream -> ${snapshot.data?.toString()}');
-                }
-              },),
-              StreamBuilder<dynamic>(initialData: 'not data', stream: GnssChannel().getGnssRawStream(), builder: (context, snapshot) {
-                if (snapshot.hasData){
-                  return Text('RawGnss stream -> ${snapshot.data?.toString()}');
-                }
-              },)
+              StreamBuilder<dynamic>(
+                initialData: 'not data',
+                stream: GnssChannel().getGpsLocationStream(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    return Text('Gnss stream -> ${snapshot.data?.toString()}');
+                  }
+                },
+              ),
+              StreamBuilder<dynamic>(
+                initialData: 'not data',
+                stream: GnssChannel().getGnssRawStream(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    return Text(
+                        'RawGnss stream -> ${snapshot.data?.toString()}');
+                  }
+                },
+              ),
+              StreamBuilder<dynamic>(
+                initialData: 'not data',
+                stream: GnssChannel().getGnssRawStream(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    return Text(
+                        'RawGnss stream -> ${snapshot.data?.toString()}');
+                  }
+                },
+              ),
             ],
           ),
         )));
   }
 
   Future<Map<String, dynamic>> _testChannel() async {
-
     final batteryLevel = await GnssChannel().getBatteryLevel();
     print('Battery Level -> $batteryLevel %.');
 
