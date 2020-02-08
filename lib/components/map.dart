@@ -3,7 +3,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:ublox_gui_flutter/screens/state/ui_state.dart';
 import 'dart:async';
-import 'package:ublox_gui_flutter/ublox/ubx_decoder.dart';
+import 'package:ublox_gui_flutter/model/ublox/ubx_decoder.dart';
 
 class MapStreamWidget extends StatefulWidget {
   final Stream<PvtMessage> stream;

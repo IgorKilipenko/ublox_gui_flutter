@@ -22,9 +22,9 @@ import android.os.Build.VERSION_CODES
 //import android.hardware.SensorManager
 import android.location.GnssMeasurement
 import android.location.GnssMeasurementsEvent
-import android.location.GnssNavigationMessage
-import android.location.GnssStatus
-import android.location.GpsStatus
+//import android.location.GnssNavigationMessage
+//import android.location.GnssStatus
+//import android.location.GpsStatus
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
@@ -101,39 +101,19 @@ class MainActivity: FlutterActivity() {
             }
         }
 
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, RAW_GNSS_CHENNEL).setMethodCallHandler {
-            // Note: this method is invoked on the main thread.
-            call, result ->
-            if (call.method == "getGpsProviders") {
-                val providers: List<String> = getGpsProviders()
-                result.success(providers)
-            } else if (call.method == "isLocationEnabled") {
-                val locationEnabled: Boolean = isLocationEnabled()
-                result.success(locationEnabled)
-            } else {
-                result.notImplemented()
-            }
-        }
-
-
-        //EventChannel(flutterEngine.dartExecutor.binaryMessenger, GNSS_STREAM_CHANNEL).setStreamHandler(
-        //    object : EventChannel.StreamHandler {
-        //        override fun onListen(arguments: Any?, sink: EventSink?) {
-        //            //_locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0.0f, GpsLocationListener(sink as EventSink) as? LocationListener)
-        //            _locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        //            var handler : Handler = Handler(Looper.getMainLooper());
-        //            _gnssMeasurementsListener = GnssMeasurementsListener(sink as EventSink)
-        //            _locationManager.registerGnssMeasurementsCallback(_gnssMeasurementsListener, handler)
-        //        }
-////
-        //        override fun onCancel(arguments: Any?) {
-        //            if (_gnssMeasurementsListener != null) {
-        //                _locationManager.unregisterGnssMeasurementsCallback(_gnssMeasurementsListener)
-        //            }
-////
-        //        }
-        //    }
-        //)
+        //////////////MethodChannel(flutterEngine.dartExecutor.binaryMessenger, RAW_GNSS_CHENNEL).setMethodCallHandler {
+        //////////////    // Note: this method is invoked on the main thread.
+        //////////////    call, result ->
+        //////////////    if (call.method == "getGpsProviders") {
+        //////////////        val providers: List<String> = getGpsProviders()
+        //////////////        result.success(providers)
+        //////////////    } else if (call.method == "isLocationEnabled") {
+        //////////////        val locationEnabled: Boolean = isLocationEnabled()
+        //////////////        result.success(locationEnabled)
+        //////////////    } else {
+        //////////////        result.notImplemented()
+        //////////////    }
+        //////////////}
     }
 
     class GnssMeasurementsListener(var sink: EventSink) : GnssMeasurementsEvent.Callback() {
@@ -209,7 +189,7 @@ class MainActivity: FlutterActivity() {
             )
         }
         _batteryManager = getSystemService(Context.BATTERY_SERVICE) as BatteryManager
-        _locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        /////////////_locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         /////_sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
     }
 }

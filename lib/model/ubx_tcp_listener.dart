@@ -2,7 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:async';
-import 'package:ublox_gui_flutter/ublox/ubx_decoder.dart';
+import 'package:ublox_gui_flutter/model/ublox/ubx_decoder.dart';
 import 'package:flutter/foundation.dart';
 
 @immutable

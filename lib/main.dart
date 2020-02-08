@@ -8,7 +8,7 @@ import 'package:ublox_gui_flutter/components/receiver.dart';
 import 'package:ublox_gui_flutter/model/ubx_tcp_listener.dart';
 import 'package:ublox_gui_flutter/routes.dart';
 import 'package:ublox_gui_flutter/screens/state/ui_state.dart';
-import 'package:ublox_gui_flutter/ublox/ubx_decoder.dart';
+import 'package:ublox_gui_flutter/model/ublox/ubx_decoder.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();

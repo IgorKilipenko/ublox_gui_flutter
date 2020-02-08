@@ -5,7 +5,7 @@ import 'package:ublox_gui_flutter/native_add.dart';
 import 'package:ublox_gui_flutter/routes.dart';
 import 'dart:async';
 
-import 'package:ublox_gui_flutter/rtklib/Gtime.dart';
+import 'package:ublox_gui_flutter/model/rtklib/Gtime.dart';
 import 'package:ublox_gui_flutter/screens/screen_arguments.dart';
 
 class DebugScreen extends StatelessWidget {
@@ -54,19 +54,24 @@ class DebugScreen extends StatelessWidget {
                 stream: GnssChannel().getGnssRawStream(),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
+                    if (snapshot.data is MeasurmentItem){
+                      final MeasurmentItem m = snapshot.data as MeasurmentItem;
+                      return Column(
+                        children: <Widget>[
+                          Text('accumulatedDeltaRangeMeters -> ${m.accumulatedDeltaRangeMeters}'),
+                          Text('accumulatedDeltaRangeState -> ${m.accumulatedDeltaRangeState}'),
+                          Text('accumulatedDeltaRangeUncertaintyMeters -> ${m.accumulatedDeltaRangeUncertaintyMeters}'),
+                          Text('automaticGainControlLevelDb -> ${m.automaticGainControlLevelDb}'),
+                          Text('carrierFrequencyHz -> ${m.carrierFrequencyHz}'),
+                          Text('cn0DbHz -> ${m.cn0DbHz}'),
+                          Text('codeType -> ${m.codeType}'),
+                        ],
+                      );
+                    }
                     return Text(
                         'RawGnss stream -> ${snapshot.data?.toString()}');
                   }
-                },
-              ),
-              StreamBuilder<dynamic>(
-                initialData: 'not data',
-                stream: GnssChannel().getGnssRawStream(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    return Text(
-                        'RawGnss stream -> ${snapshot.data?.toString()}');
-                  }
+                  return null;
                 },
               ),
             ],

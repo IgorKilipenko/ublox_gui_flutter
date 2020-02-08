@@ -59,17 +59,24 @@ import android.app.Activity
 import android.util.Log
 
 
-class GpsLocationStream(context: Context, activity: Activity,  minTime: Long = 1000L, minDistance: Float = 0.0f) : StreamHandler, MethodCallHandler  {
-    private val _mContext = context
-    private val _mActivity = activity
+class GpsLocationStream private constructor (context: Context, activity: Activity,  minTime: Long = 1000L, minDistance: Float = 0.0f) : StreamHandler, MethodCallHandler  {
+    private val _mContext : Context
+    private val _mActivity : Activity
 
-    private var _minTime :Long = minTime
-    private var _minDistance :Float = minDistance
+    private var _minTime :Long
+    private var _minDistance :Float
 
-    private var _locationListener: GpsLocationListener? = null
-    private var _locationManager: LocationManager? = null
+    private var _locationListener: GpsLocationListener?
+    private var _locationManager: LocationManager
 
-    private var _streamEnabled = false;
+    init {
+        _mContext = context
+        _mActivity = activity
+        _minTime = minTime
+        _minDistance = minDistance
+        _locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        _locationListener = null;
+    }
 
     companion object {
         @JvmStatic 
@@ -110,34 +117,55 @@ class GpsLocationStream(context: Context, activity: Activity,  minTime: Long = 1
         }
     }
 
-    //public fun start() {
-    //    if (_streamEnabled) return
-    //    val channel = EventChannel(messenger, STREAM_CHANNEL)
-    //    _streamEnabled = channel.setStreamHandler(plugin)
-    //}
-
     override fun onListen(arguments: Any?, sink: EventSink?) {
         Log.w(TAG, "onListen start")
         if (sink != null) {
             checkPermission(_mContext, _mActivity)
-            _locationManager = _mContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-            _locationManager?.requestLocationUpdates(LocationManager.GPS_PROVIDER, _minTime, _minDistance, GpsLocationListener(sink as EventSink) as? LocationListener, Looper.getMainLooper())
+            /*_locationManager = _mContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager*/
+            _locationListener = GpsLocationListener(sink as EventSink)
+            _locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, _minTime, _minDistance, _locationListener as LocationListener, Looper.getMainLooper())
         }
     }
 
     override fun onCancel(arguments: Any?) {
         Log.w(TAG, "onCancel start")
         if (_locationListener != null) {
-            _locationManager?.removeUpdates(_locationListener);
+            _locationManager.removeUpdates(_locationListener);
         }
     }
 
     override fun onMethodCall(call : MethodCall, result : MethodChannel.Result) {
         when (call.method) {
-            "stop" -> onCancel(null)
-            //"start" -> 
+            "stop" -> {
+                onCancel(null)
+                result.success("canceled")
+            }
+            "getGpsProviders" -> {
+                val providers: List<String> = getGpsProviders()
+                result.success(providers)
+            }
+            "isLocationEnabled" -> {
+                val locationEnabled: Boolean = isLocationEnabled()
+                result.success(locationEnabled)
+            }
+            else -> result.notImplemented()
         }
+    }
 
+    private fun getGpsProviders(): List<String> {
+        val gpsProviders: List<String> = _locationManager.getProviders(true)
+        return gpsProviders
+    }
+
+    private fun getGpsProvider(): LocationProvider {
+        val gpsProvider = _locationManager.getProvider(LocationManager.GPS_PROVIDER);
+        return gpsProvider
+    }
+
+    private fun isLocationEnabled(): Boolean {
+        val enabled: Boolean
+        enabled = _locationManager.isLocationEnabled()
+        return enabled
     }
 
     class GpsLocationListener(var sink: EventSink) : LocationListener {

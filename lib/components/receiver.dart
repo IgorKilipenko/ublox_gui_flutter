@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ublox_gui_flutter/model/ubx_tcp_listener.dart';
-import 'package:ublox_gui_flutter/ublox/ubx_decoder.dart';
+import 'package:ublox_gui_flutter/model/ublox/ubx_decoder.dart';
 
 class ReceiverPaneWidget extends StatelessWidget {
   @override
