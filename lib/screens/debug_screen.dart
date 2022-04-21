@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:ublox_gui_flutter/model/gnss/measurment.dart';
 import 'package:ublox_gui_flutter/model/gnss/gnss_channel.dart';
 import 'package:ublox_gui_flutter/native_add.dart';
 import 'package:ublox_gui_flutter/routes.dart';
@@ -54,19 +55,28 @@ class DebugScreen extends StatelessWidget {
                 stream: GnssChannel().getGnssRawStream(),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
-                    if (snapshot.data is MeasurmentItem){
-                      final MeasurmentItem m = snapshot.data as MeasurmentItem;
-                      return Column(
-                        children: <Widget>[
-                          Text('accumulatedDeltaRangeMeters -> ${m.accumulatedDeltaRangeMeters}'),
-                          Text('accumulatedDeltaRangeState -> ${m.accumulatedDeltaRangeState}'),
-                          Text('accumulatedDeltaRangeUncertaintyMeters -> ${m.accumulatedDeltaRangeUncertaintyMeters}'),
-                          Text('automaticGainControlLevelDb -> ${m.automaticGainControlLevelDb}'),
-                          Text('carrierFrequencyHz -> ${m.carrierFrequencyHz}'),
-                          Text('cn0DbHz -> ${m.cn0DbHz}'),
-                          Text('codeType -> ${m.codeType}'),
-                        ],
-                      );
+                    if (snapshot.data is List<MeasurmentItem>) {
+                      final list = snapshot.data as List<MeasurmentItem>;
+                      final widgets = list
+                          .map((m) => Container(
+                                height: 150,
+                                child: Column(children: <Widget>[
+                                  Text(
+                                      'accumulatedDeltaRangeMeters -> ${m.accumulatedDeltaRangeMeters}'),
+                                  Text(
+                                      'accumulatedDeltaRangeState -> ${m.accumulatedDeltaRangeState}'),
+                                  Text(
+                                      'accumulatedDeltaRangeUncertaintyMeters -> ${m.accumulatedDeltaRangeUncertaintyMeters}'),
+                                  Text(
+                                      'automaticGainControlLevelDb -> ${m.automaticGainControlLevelDb}'),
+                                  Text(
+                                      'carrierFrequencyHz -> ${m.carrierFrequencyHz}'),
+                                  Text('cn0DbHz -> ${m.cn0DbHz}'),
+                                  Text('codeType -> ${m.codeType}'),
+                                ]),
+                              ))
+                          .toList();
+                      return Flexible(child: ListView(children: widgets, padding: new EdgeInsets.symmetric(vertical: 8.0),));
                     }
                     return Text(
                         'RawGnss stream -> ${snapshot.data?.toString()}');

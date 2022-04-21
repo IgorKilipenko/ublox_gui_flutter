@@ -105,20 +105,17 @@ class UbxTcpListener with ChangeNotifier {
     return _streamSubscription;
   }
 
-  Future<dynamic> stopListen() async {
+  Future<void> stopListen() async {
     if (socket == null || _streamSubscription == null) {
       print('Socket is null');
       return false;
     }
-    var res;
     try {
-      res = await _streamSubscription.cancel();
-      print('Cancel Stream Subscription, return $res');
+      await _streamSubscription.cancel();
+      print('Cancel Stream Subscription');
     } catch (e) {
       print('Error cancel Stream Subscription, e -> $e');
     }
-
-    return res;
   }
 
   Future<bool> connectTcp({bool forceConnect = false}) async {

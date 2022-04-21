@@ -121,3 +121,20 @@ class StreamFormat {
   static const STRFMT_NMEA = 21;
   static const MAXRCVFMT = 16;
 }
+
+
+class Stream {
+    int type;           /* type (STR_???) */
+    int mode;           /* mode (STR_MODE_?) */
+    int state;          /* state (-1:error,0:close,1:open) */
+    int inb,inr;   /* input bytes/rate */
+    int outb,outr; /* output bytes/rate */
+    int tick_i; /* input tick tick */
+    int tick_o; /* output tick */
+    int tact;  /* active tick */
+    int inbt,outbt; /* input/output bytes at tick */
+    //lock_t lock;        /* lock flag */
+    dynamic port;         /* type dependent port control struct */
+    String path; /* stream path */
+    String msg;  /* stream message */
+}

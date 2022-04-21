@@ -1,9 +1,10 @@
 package com.igorkili.ublox_gui_flutter.raw_gnss
+import android.location.GnssClock
 import android.location.GnssMeasurement
 
 class GnssMeasurementMapper {
     companion object {
-        val CODE : Int = 0x10
+        @JvmStatic
         val MapFields: HashMap<String, Int> = hashMapOf(
                 "describeContents" to 0,
                 "accumulatedDeltaRangeMeters" to 1,
@@ -27,8 +28,9 @@ class GnssMeasurementMapper {
                 "svid" to 16,
                 "timeOffsetNanos" to 17
         )
+        @JvmStatic
         fun map(measurement : GnssMeasurement) : List<Any> {
-            val res : List<Any> = listOf(
+            return listOf(
                     measurement.describeContents(),
                     measurement.accumulatedDeltaRangeMeters,
                     measurement.accumulatedDeltaRangeState,
@@ -47,7 +49,32 @@ class GnssMeasurementMapper {
                     measurement.svid,
                     measurement.timeOffsetNanos
             )
-            return res
+        }
+        @JvmStatic
+        fun mapClock(clock : GnssClock) : List<Any> {
+            return listOf(
+                    clock.describeContents(),
+                    clock.biasNanos,
+                    clock.biasUncertaintyNanos,
+                    clock.driftNanosPerSecond,
+                    clock.driftUncertaintyNanosPerSecond,
+                    clock.elapsedRealtimeNanos,
+                    clock.elapsedRealtimeUncertaintyNanos,
+                    clock.fullBiasNanos,
+                    clock.hardwareClockDiscontinuityCount,
+                    clock.leapSecond,
+                    clock.timeNanos,
+                    clock.timeUncertaintyNanos,
+                    clock.hasBiasNanos(),
+                    clock.hasBiasUncertaintyNanos(),
+                    clock.hasDriftNanosPerSecond(),
+                    clock.hasDriftUncertaintyNanosPerSecond(),
+                    clock.hasElapsedRealtimeNanos(),
+                    clock.hasElapsedRealtimeUncertaintyNanos(),
+                    clock.hasFullBiasNanos(),
+                    clock.hasLeapSecond(),
+                    clock.hasTimeUncertaintyNanos()
+            )
         }
     }
 }

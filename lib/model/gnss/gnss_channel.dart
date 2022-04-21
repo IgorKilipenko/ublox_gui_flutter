@@ -1,6 +1,8 @@
 import 'package:flutter/services.dart';
 import 'dart:async';
 
+import 'package:ublox_gui_flutter/model/gnss/measurment.dart';
+
 class GnssRaw {
   int id;
 }
@@ -10,7 +12,7 @@ class GnssChannel {
   final MethodChannel _batteryChennel;
   final EventChannel _gpsLocationEventChannel;
   final EventChannel _gnssRawEventChannel;
-  Stream<dynamic> _rawDataStream;
+  Stream<List<MeasurmentItem>> _rawDataStream;
   Stream<dynamic> _locationDataStream;
   static GnssChannel _instace;
 
@@ -92,17 +94,54 @@ class GnssChannel {
     return _locationDataStream;
   }
 
-  Stream<dynamic> getGnssRawStream() {
-    _rawDataStream ??= _gnssRawEventChannel
-        ?.receiveBroadcastStream()
-        .transform(StreamTransformer<dynamic, MeasurmentItem>.fromHandlers(
+  //Stream<dynamic> getGnssRawStream() {
+  //  _rawDataStream ??= _gnssRawEventChannel
+  //      ?.receiveBroadcastStream()
+  //      .transform(StreamTransformer<dynamic, MeasurmentItem>.fromHandlers(
+  //        handleData: (dynamic data, EventSink sink) {
+  //          //sink.add(data * 2);
+  //          try {
+  //            if (data is List<dynamic>) {
+  //              //print(data);
+  //              var mes = MeasurmentItem.fromList(data /*as List<dynamic>*/);
+  //              sink.add(mes);
+  //            } else {
+  //              //sink.add(data);
+  //              if (_gnssRawStateController.hasListener) {
+  //                _gnssRawStateController.add(data.toString());
+  //              }
+  //            }
+  //          } catch (e) {
+  //            print('$e');
+  //          }
+  //        },
+  //        handleError: (error, stacktrace, sink) {
+  //          sink.addError('Something went wrong: $error');
+  //        },
+  //        handleDone: (sink) {
+  //          sink.close();
+  //        },
+  //      ));
+  //  return _rawDataStream;
+  //}
+
+  static const FKEY_MEAS = "measurements";
+  static const FKEY_CODE = "code";
+  static const FKEY_CLOCK = "clock";
+  static const MEAS_CODE = 0x10;
+  static const STAT_CODE = 0x05;
+  Stream<List<MeasurmentItem>> getGnssRawStream() {
+    _rawDataStream ??= _gnssRawEventChannel.receiveBroadcastStream().transform<List<MeasurmentItem>>(
+            StreamTransformer<dynamic, List<MeasurmentItem>>.fromHandlers(
           handleData: (dynamic data, EventSink sink) {
             //sink.add(data * 2);
             try {
-              if (data is List<dynamic>) {
-                //print(data);
-                var mes = MeasurmentItem.fromList(data as List<dynamic>);
-                sink.add(mes);
+              if (data is Map<dynamic, dynamic>) {
+                final packet = data.cast<String, dynamic>();
+                if (packet[FKEY_CODE] == MEAS_CODE) {
+                  final res = _decodeMeasBatch(packet);
+                  sink.add(res);
+                }
               } else {
                 //sink.add(data);
                 if (_gnssRawStateController.hasListener) {
@@ -122,92 +161,18 @@ class GnssChannel {
         ));
     return _rawDataStream;
   }
-}
 
-class MeasurmentItem {
-  MeasurmentItem(
-      {this.describeContents,
-      this.accumulatedDeltaRangeMeters,
-      this.accumulatedDeltaRangeState,
-      this.accumulatedDeltaRangeUncertaintyMeters,
-      this.automaticGainControlLevelDb,
-      this.carrierFrequencyHz,
-      this.cn0DbHz,
-      this.codeType,
-      this.constellationType,
-      this.multipathIndicator,
-      this.pseudorangeRateMetersPerSecond,
-      this.pseudorangeRateUncertaintyMetersPerSecond,
-      this.receivedSvTimeNanos,
-      this.snrInDb,
-      this.state,
-      this.svid,
-      this.timeOffsetNanos});
-  final num describeContents;
-  final num accumulatedDeltaRangeMeters;
-  final num accumulatedDeltaRangeState;
-  final num accumulatedDeltaRangeUncertaintyMeters;
-  final num automaticGainControlLevelDb;
-  final num carrierFrequencyHz;
-  final num cn0DbHz;
-  final String codeType;
-  final num constellationType;
-  final num multipathIndicator;
-  final num pseudorangeRateMetersPerSecond;
-  final num pseudorangeRateUncertaintyMetersPerSecond;
-  final num receivedSvTimeNanos;
-  final num snrInDb;
-  final num state;
-  final num svid;
-  final num timeOffsetNanos;
+  static List<MeasurmentItem> _decodeMeasBatch(Map<String, dynamic> packet) {
+    assert(packet != null);
+    assert(packet.containsKey(FKEY_MEAS));
+    assert(packet[FKEY_MEAS] is List<dynamic>);
 
-  factory MeasurmentItem.fromList(List<dynamic> list) {
-    assert(list != null);
-    if (list == null) return null;
-    return MeasurmentItem(
-        describeContents: list[RawMeasMapper.describeContents] as num,
-        accumulatedDeltaRangeMeters:
-            list[RawMeasMapper.accumulatedDeltaRangeMeters] as num,
-        accumulatedDeltaRangeState:
-            list[RawMeasMapper.accumulatedDeltaRangeState] as num,
-        accumulatedDeltaRangeUncertaintyMeters:
-            list[RawMeasMapper.accumulatedDeltaRangeUncertaintyMeters] as num,
-        automaticGainControlLevelDb:
-            list[RawMeasMapper.automaticGainControlLevelDb] as num,
-        carrierFrequencyHz: list[RawMeasMapper.carrierFrequencyHz] as num,
-        cn0DbHz: list[RawMeasMapper.cn0DbHz] as num,
-        codeType: list[RawMeasMapper.codeType] as String,
-        constellationType: list[RawMeasMapper.constellationType] as num,
-        multipathIndicator: list[RawMeasMapper.multipathIndicator] as num,
-        pseudorangeRateMetersPerSecond:
-            list[RawMeasMapper.pseudorangeRateMetersPerSecond] as num,
-        pseudorangeRateUncertaintyMetersPerSecond:
-            list[RawMeasMapper.pseudorangeRateUncertaintyMetersPerSecond]
-                as num,
-        receivedSvTimeNanos: list[RawMeasMapper.receivedSvTimeNanos] as num,
-        snrInDb: list[RawMeasMapper.snrInDb] as num,
-        state: list[RawMeasMapper.state] as num,
-        svid: list[RawMeasMapper.svid] as num,
-        timeOffsetNanos: list[RawMeasMapper.timeOffsetNanos] as num);
+    final batch = packet[FKEY_MEAS] as List<dynamic>;
+    final res = List<MeasurmentItem>();
+    for (final List<dynamic> measItem in batch) {
+      final mes = MeasurmentItem.fromList(measItem);
+      res.add(mes);
+    }
+    return res;
   }
-}
-
-class RawMeasMapper {
-  static final int describeContents = 0;
-  static final int accumulatedDeltaRangeMeters = 1;
-  static final int accumulatedDeltaRangeState = 2;
-  static final int accumulatedDeltaRangeUncertaintyMeters = 3;
-  static final int automaticGainControlLevelDb = 4;
-  static final int carrierFrequencyHz = 5;
-  static final int cn0DbHz = 6;
-  static final int codeType = 7;
-  static final int constellationType = 8;
-  static final int multipathIndicator = 9;
-  static final int pseudorangeRateMetersPerSecond = 10;
-  static final int pseudorangeRateUncertaintyMetersPerSecond = 11;
-  static final int receivedSvTimeNanos = 12;
-  static final int snrInDb = 13;
-  static final int state = 14;
-  static final int svid = 15;
-  static final int timeOffsetNanos = 16;
 }

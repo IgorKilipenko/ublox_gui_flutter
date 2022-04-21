@@ -36,7 +36,7 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.BinaryMessenger
-import io.flutter.plugins.GeneratedPluginRegistrant
+//import io.flutter.plugins.GeneratedPluginRegistrant
 
 
 import io.flutter.plugin.common.EventChannel
@@ -56,9 +56,9 @@ import android.app.Activity
 
 import android.util.Log
 
-class GnssRawDataStream private constructor (context: Context, activity: Activity) : StreamHandler  {
-    private val _mContext : Context
-    private val _mActivity : Activity
+class GnssRawDataStream private constructor (context: Context, activity: Activity) : StreamHandler {
+    private val _mContext: Context
+    private val _mActivity: Activity
 
     private var _gnssMeasurementsListener: GnssMeasurementsEvent.Callback?
     private var _locationManager: LocationManager
@@ -71,44 +71,53 @@ class GnssRawDataStream private constructor (context: Context, activity: Activit
     }
 
     companion object {
-        @JvmStatic 
-        private val TAG = "GnssRawChannel"
-        @JvmStatic 
-        val STREAM_CHANNEL = "ublox_gui_flutter/gnss_raw_data/events"
-        @JvmStatic 
-        private val LOCATION_PERMISSION_REQUEST = 1
-        @JvmStatic 
-        private val REQUIRED_PERMISSIONS = arrayOf(
-            Manifest.permission.ACCESS_FINE_LOCATION
-        )
         @JvmStatic
-        fun registerStreamWith(registrar: Registrar) : GnssRawDataStream {
+        private val TAG = "GnssRawChannel"
+        @JvmStatic
+        val MEAS_CODE: Byte = 0x10
+        @JvmStatic
+        val STATE_CODE: Byte = 0x05
+        @JvmStatic
+        val STREAM_CHANNEL = "ublox_gui_flutter/gnss_raw_data/events"
+        @JvmStatic
+        private val LOCATION_PERMISSION_REQUEST = 1
+        @JvmStatic
+        private val REQUIRED_PERMISSIONS = arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION
+        )
+
+        @JvmStatic
+        fun registerStreamWith(registrar: Registrar): GnssRawDataStream {
             return registerStreamWith(registrar.context(), registrar.activity(), registrar.messenger())
         }
+
         @JvmStatic
-        fun registerStreamWith(context: Context, activity: Activity, messenger : BinaryMessenger) : GnssRawDataStream {
+        fun registerStreamWith(context: Context, activity: Activity, messenger: BinaryMessenger): GnssRawDataStream {
             val plugin = GnssRawDataStream(context, activity)
             val channel = EventChannel(messenger, STREAM_CHANNEL)
             channel.setStreamHandler(plugin)
             return plugin
         }
+
         @JvmStatic
         fun checkPermission(context: Context, activity: Activity) {
             if (context.checkSelfPermission(REQUIRED_PERMISSIONS[0])
-                != PackageManager.PERMISSION_GRANTED) {
+                    != PackageManager.PERMISSION_GRANTED) {
                 // Request permissions from the user
                 activity.requestPermissions(
-                    REQUIRED_PERMISSIONS,
-                    LOCATION_PERMISSION_REQUEST
+                        REQUIRED_PERMISSIONS,
+                        LOCATION_PERMISSION_REQUEST
                 )
             }
         }
 
         @JvmStatic
-        fun rawMeasurementToList(measurement : GnssMeasurement) : List<Any> {
+        fun rawMeasurementToList(measurement: GnssMeasurement): List<Any> {
             val list = GnssMeasurementMapper.map(measurement)
             return list
         }
+
+
     }
 
     override fun onListen(arguments: Any?, sink: EventSink?) {
@@ -116,7 +125,7 @@ class GnssRawDataStream private constructor (context: Context, activity: Activit
         if (sink != null) {
             checkPermission(_mContext, _mActivity)
             //_locationManager = _mContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-            var handler : Handler = Handler(Looper.getMainLooper())
+            var handler: Handler = Handler(Looper.getMainLooper())
             _gnssMeasurementsListener = GnssMeasurementsListener(sink) as GnssMeasurementsEvent.Callback
             _locationManager.registerGnssMeasurementsCallback(_gnssMeasurementsListener, handler)
         }
@@ -132,15 +141,32 @@ class GnssRawDataStream private constructor (context: Context, activity: Activit
 
     class GnssMeasurementsListener(var sink: EventSink) : GnssMeasurementsEvent.Callback() {
         override fun onGnssMeasurementsReceived(event: GnssMeasurementsEvent) {
-            for (m : GnssMeasurement in event.getMeasurements()) {
+            val meas = event.measurements.toList()
+            val batch = arrayOfNulls<Any>(meas.size)
+            for ((i: Int, m: GnssMeasurement) in meas.withIndex()) {
                 //sink.success("SVID -> ${m.getSvid()}\nFrequencyHz -> ${m.getCarrierFrequencyHz()}")
-                var list = GnssMeasurementMapper.map(m)
-                sink.success(list)
+                val list = GnssMeasurementMapper.map(m)
+                //sink.success(list)
+                batch[i] = list
             }
+
+            val clock = GnssMeasurementMapper.mapClock(event.clock)
+
+            val res = hashMapOf(
+                    "code" to MEAS_CODE,
+                    "measurements" to batch.toList(),
+                    "clock" to clock
+            )
+            sink.success(res)
         }
 
         override fun onStatusChanged(status: Int) {
-            sink.success("Status -> $status")
+            //sink.success("Status -> $status")
+            val res = hashMapOf(
+                    "code" to STATE_CODE,
+                    "status" to status
+            )
+            sink.success(res)
         }
     }
 }

@@ -22,6 +22,8 @@ class Gtime_t extends Struct {
       throw e;
     }
   }
+
+  external Pointer<Gtime_t> get addressOf;
 }
 
 typedef FFi_utc2gpst_ffi = Pointer<Gtime_t> Function(Pointer<Gtime_t>);
